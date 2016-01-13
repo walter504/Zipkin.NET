@@ -55,10 +55,10 @@ namespace Tracing.Core
         /** Maximum number of traces to return. Defaults to 10 */
         public readonly int limit;
 
-        QueryRequest(
+        public QueryRequest(
             string serviceName,
             string spanName,
-            List<string> annotations,
+            IList<string> annotations,
             IDictionary<string, string> binaryAnnotations,
             long minDuration,
             long maxDuration,

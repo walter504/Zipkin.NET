@@ -29,7 +29,7 @@ namespace Tracing.Core
          * <p/> Results are sorted in order of the first span's timestamp, and contain less elements than
          * trace IDs when corresponding traces aren't available.
          */
-        List<List<Span>> GetTracesByIds(List<long> traceIds);
+        List<List<Span>> GetTracesByIds(IEnumerable<long> traceIds);
 
         /**
          * Get all the {@link Endpoint#serviceName service names}.
