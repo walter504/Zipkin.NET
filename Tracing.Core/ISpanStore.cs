@@ -11,7 +11,7 @@ namespace Tracing.Core
         /**
          * Sinks the given spans, ignoring duplicate annotations.
          */
-        void accept(IEnumerable<Span> spans);
+        void Accept(IEnumerable<Span> spans);
 
         /**
          * Get the available trace information from the storage system. Spans in trace are sorted by the
@@ -20,7 +20,7 @@ namespace Tracing.Core
          * <p/> Results are sorted in order of the first span's timestamp, and contain up to {@link
          * QueryRequest#limit} elements.
          */
-        List<List<Span>> getTraces(QueryRequest request);
+        List<List<Span>> GetTraces(QueryRequest request);
 
         /**
          * Get the available trace information from the storage system. Spans in trace are sorted by the
@@ -29,21 +29,21 @@ namespace Tracing.Core
          * <p/> Results are sorted in order of the first span's timestamp, and contain less elements than
          * trace IDs when corresponding traces aren't available.
          */
-        List<List<Span>> getTracesByIds(List<long> traceIds);
+        List<List<Span>> GetTracesByIds(List<long> traceIds);
 
         /**
          * Get all the {@link Endpoint#serviceName service names}.
          *
          * <p/> Results are sorted lexicographically
          */
-        List<String> getServiceNames();
+        List<String> GetServiceNames();
 
         /**
          * Get all the span names for a particular {@link Endpoint#serviceName}.
          *
          * <p/> Results are sorted lexicographically
          */
-        List<String> getSpanNames(String serviceName);
+        List<String> GetSpanNames(String serviceName);
 
         /**
          * Returns dependency links derived from spans.
@@ -60,6 +60,6 @@ namespace Tracing.Core
          * @return dependency links in an interval contained by (endTs - lookback) or empty if none are
          *         found
          */
-        List<DependencyLink> getDependencies(long endTs, long lookback);
+        List<DependencyLink> GetDependencies(long endTs, long lookback);
     }
 }
