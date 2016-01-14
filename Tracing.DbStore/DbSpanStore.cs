@@ -94,12 +94,21 @@ namespace Tracing.DbStore
             }
         }
 
-        private List<List<Span>> GetTraces(QueryRequest request, IEnumerable<long> traceIds)
+        public IEnumerable<IEnumerable<Span>> GetTracesByIds(IEnumerable<long> traceIds)
         {
-            IDictionary<long, List<Span>> spansWithoutAnnotations;
-            IDictionary<KeyValuePair<long, long>, List<zipkin_annotations>> dbAnnotations;
+            return 0 == traceIds.Count() ? Enumerable.Empty<IEnumerable<Span>>() : GetTraces(null, traceIds);
+        }
+
+        public IEnumerable<IEnumerable<Span>> getTraces(QueryRequest request)
+        {
+            return GetTraces(request, null);
+        }
+
+        private IEnumerable<IEnumerable<Span>> GetTraces(QueryRequest request, IEnumerable<long> traceIds)
+        {
+            IDictionary<long, IEnumerable<Span>> spansWithoutAnnotations;
+            IDictionary<KeyValuePair<long, long>, IEnumerable<zipkin_annotations>> dbAnnotations;
             using (IDbConnection conn = OpenConnection())
-            using (IDbTransaction transaction = conn.BeginTransaction())
             {
                 if (request != null)
                 {
@@ -118,14 +127,14 @@ namespace Tracing.DbStore
                             duration = s.duration,
                             debug = s.debug
                         };
-                    }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.ToList());
+                    }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.AsEnumerable());
 
                 dbAnnotations = conn.Query<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceId order by a_timestamp, a_key", new { traceIds = traceIds })
-                    .GroupBy(a => new KeyValuePair<long, long>(1, 1)).ToDictionary(g => g.Key, g => g.ToList());
+                    .GroupBy(a => new KeyValuePair<long, long>(1, 1)).ToDictionary(g => g.Key, g => g.AsEnumerable());
             }
 
             List<List<Span>> result = new List<List<Span>>();
-            foreach (List<Span> spans in spansWithoutAnnotations.Values)
+            foreach (var spans in spansWithoutAnnotations.Values)
             {
                 List<Span> trace = new List<Span>();
                 foreach (Span s in spans)
@@ -163,7 +172,59 @@ namespace Tracing.DbStore
 
         private IEnumerable<long> GetTraceIdsByQuery(QueryRequest request)
         {
-            return new long[] { 1 };
+            long endTs = (request.endTs > 0 && request.endTs != long.MaxValue)
+                ? request.endTs * 1000 : Util.GetCurrentTimeStamp() * 1000;
+            string condition = " where s.start_ts > " + request.lookback * 1000
+                + " and s.start_ts <= " + endTs;
+            if (!string.IsNullOrEmpty(request.spanName))
+            {
+                condition += " and s.name = '" + request.spanName + "'";
+            }
+            if (request.minDuration.HasValue && request.maxDuration.HasValue)
+            {
+                condition += " and s.duration > " + request.minDuration + " and s.start_ts <= " + request.maxDuration;
+            }
+            string joinSql = string.Empty;
+            foreach (var pair in request.binaryAnnotations)
+            {
+                joinSql += " or (a.a_type = " + (int)BinaryAnnotation.Type.STRING +
+                    " and a.a_key = '" + pair.Key + " and a.a_value = '" + pair.Value + "')";
+            }
+            foreach (var key in request.annotations)
+            {
+                joinSql += " or (a.a_type = -1 and a.a_key = '" + key + "')";
+            }
+            if (!string.IsNullOrEmpty(joinSql))
+            {
+                joinSql = " join zipkin_annotations as a on s.trace_id = a.trace_id and s.id = a.span_id and (1=2 " + joinSql + ")";
+            }
+            string query = "select distinct s.trace_id from zipkin_spans as s" + joinSql + condition;
+
+            using (IDbConnection conn = OpenConnection())
+            {
+                return conn.Query<long>(query);
+            }
+        }
+
+        public IEnumerable<string> getServiceNames()
+        {
+            using (IDbConnection conn = OpenConnection())
+            {
+                return conn.Query<string>(@"select distinct endpoint_service_name 
+                    from zipkin_annotations 
+                    where endpoint_service_name is not null and endpoint_service_name != ''");
+            }
+        }
+
+        public IEnumerable<string> getSpanNames(string serviceName)
+        {
+            using (IDbConnection conn = OpenConnection())
+            {
+                return conn.Query<string>(@"select distinct s.name
+                    from zipkin_spans as s
+                        join zipkin_annotations as a on s.trace_id = a.trace_id and s.id = a.span_id
+                    where a.endpoint_service_name = @serviceName", new { serviceName = serviceName });
+            }
         }
     }
 
