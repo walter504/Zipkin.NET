@@ -12,6 +12,10 @@ namespace Tracing.Core
         public int ipv4;
         public short? port;
 
+        public Endpoint()
+        {
+        }
+
         Endpoint(string serviceName, int ipv4, short? port)
         {
             this.serviceName = serviceName.ToLower();

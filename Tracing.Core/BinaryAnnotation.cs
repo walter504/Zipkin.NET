@@ -16,18 +16,18 @@ namespace Tracing.Core
         public Type type;
         public Endpoint endpoint;
 
-        BinaryAnnotation(string key, Endpoint endpoint)
+        public BinaryAnnotation(string key, Endpoint endpoint)
             : this(key, new byte[] { 1 }, Type.BOOL, Ensure.ArgumentNotNull(endpoint, "endpoint"))
         {
         }
 
         /** string values are the only queryable type of binary annotation. */
-        BinaryAnnotation(string key, string value, Endpoint endpoint)
+        public BinaryAnnotation(string key, string value, Endpoint endpoint)
             : this(key, Encoding.UTF8.GetBytes(value), Type.STRING, endpoint)
         {
         }
 
-        BinaryAnnotation(string key, byte[] value, Type type, Endpoint endpoint)
+        public BinaryAnnotation(string key, byte[] value, Type type, Endpoint endpoint)
         {
             this.key = Ensure.ArgumentNotNull(key, "key");
             this.value = Ensure.ArgumentNotNull(value, "value");

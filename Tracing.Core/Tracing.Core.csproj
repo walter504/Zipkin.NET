@@ -47,6 +47,7 @@
     <Compile Include="Helpers\Ensure.cs" />
     <Compile Include="Helpers\Util.cs" />
     <Compile Include="Codec.cs" />
+    <Compile Include="Internal\ApplyTimestampAndDuration.cs" />
     <Compile Include="Internal\JsonCodec.cs" />
     <Compile Include="ISpanStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -12,7 +12,7 @@ namespace Tracing.Core
         public string value;
         public Endpoint endpoint;
 
-        Annotation(long timestamp, String value, Endpoint endpoint)
+        public Annotation(long timestamp, String value, Endpoint endpoint)
         {
             this.timestamp = timestamp;
             this.value = Ensure.ArgumentNotNull(value, "value");

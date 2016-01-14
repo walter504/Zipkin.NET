@@ -19,7 +19,11 @@ namespace Tracing.Core
         public readonly IList<BinaryAnnotation> binaryAnnotations;
         public bool? debug;
 
-        Span(long traceId,
+        public Span()
+        { 
+        }
+
+        public Span(long traceId,
            string name,
            long id,
            long? parentId,

@@ -46,6 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DbSpanStore.cs" />
+    <Compile Include="Models\ZipkinAnnotations.cs" />
+    <Compile Include="Models\ZipkinSpans.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
