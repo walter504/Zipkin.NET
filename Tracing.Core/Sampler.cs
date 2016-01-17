@@ -59,6 +59,10 @@ namespace Tracing.Core
         /** {@link #isSampled(long)} returns true when abs(traceId) < boundary */
         private readonly long boundary;
 
+        public ProbabilisticSampler() 
+            : this(0.99F)
+        {
+        }
         public ProbabilisticSampler(float rate)
         {
             Ensure.ArgumentAssert(rate > 0 && rate < 1, "rate should be between 0 and 1: was %s", rate);

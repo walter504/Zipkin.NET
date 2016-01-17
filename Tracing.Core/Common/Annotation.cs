@@ -8,11 +8,11 @@ namespace Tracing.Core
 {
     public class Annotation : IComparable<Annotation>
     {
-        public long timestamp;
-        public string value;
-        public Endpoint endpoint;
+        public long timestamp { get; set; }
+        public string value { get; set; }
+        public Endpoint endpoint { get; set; }
 
-        public Annotation(long timestamp, String value, Endpoint endpoint)
+        public Annotation(long timestamp, string value, Endpoint endpoint)
         {
             this.timestamp = timestamp;
             this.value = Ensure.ArgumentNotNull(value, "value");

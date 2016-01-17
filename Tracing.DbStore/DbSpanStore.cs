@@ -9,16 +9,18 @@ using Tracing.Core;
 using Dapper;
 using Tracing.Core.Internal;
 using Tracing.DbStore.Models;
+using System.Configuration;
+using MySql.Data.MySqlClient;
 
 namespace Tracing.DbStore
 {
-    public class DbSpanStore
+    public class DbSpanStore : ISpanStore
     {
-        public readonly string sqlConnectionString = "server=127.0.0.1;database=tracing;uid=root;pwd=123456;charset='gbk'";
+        public readonly string sqlConnectionString = ConfigurationManager.ConnectionStrings["zipkin"].ConnectionString;
 
-        private SqlConnection OpenConnection()
+        private IDbConnection OpenConnection()
         {
-            SqlConnection conn = new SqlConnection(sqlConnectionString);
+            IDbConnection conn = new MySqlConnection(sqlConnectionString);
             conn.Open();
             return conn;
         }
@@ -47,7 +49,7 @@ namespace Tracing.DbStore
                         start_ts = span.timestamp.Value,
                         duration = span.duration.Value
                     };
-                    conn.Execute(@"replace to zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
+                    conn.Execute(@"replace into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
                         values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)", spanEntity, transaction);
 
                     foreach (var annotation in span.annotations)
@@ -66,8 +68,8 @@ namespace Tracing.DbStore
                             annotationEntity.endpoint_ipv4 = annotation.endpoint.ipv4;
                             annotationEntity.endpoint_port = annotation.endpoint.port;
                         }
-                        conn.Execute(@"replace to zipkin_annotations(trace_id, span_id, a_key, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
-                            values(@trace_id,@ span_id,@ a_key,@ a_type,@ a_timestamp,@endpoint_ipv4,@ endpoint_port,@ endpoint_service_name)", annotationEntity, transaction);
+                        conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
+                            values(@trace_id,@span_id,@a_key,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annotationEntity, transaction);
                     }
                     foreach (var annotation in span.binaryAnnotations)
                     {
@@ -86,8 +88,8 @@ namespace Tracing.DbStore
                             annotationEntity.endpoint_ipv4 = annotation.endpoint.ipv4;
                             annotationEntity.endpoint_port = annotation.endpoint.port;
                         }
-                        conn.Execute(@"replace to zipkin_annotations(trace_id, span_id, a_key, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
-                            values(@trace_id,@ span_id,@ a_key,@ a_type,@ a_timestamp,@endpoint_ipv4,@ endpoint_port,@ endpoint_service_name)", annotationEntity, transaction);
+                        conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
+                            values(@trace_id,@span_id,@a_key,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annotationEntity, transaction);
                     }
                 }
                 transaction.Commit();
@@ -99,7 +101,7 @@ namespace Tracing.DbStore
             return 0 == traceIds.Count() ? Enumerable.Empty<IEnumerable<Span>>() : GetTraces(null, traceIds);
         }
 
-        public IEnumerable<IEnumerable<Span>> getTraces(QueryRequest request)
+        public IEnumerable<IEnumerable<Span>> GetTraces(QueryRequest request)
         {
             return GetTraces(request, null);
         }
@@ -117,30 +119,28 @@ namespace Tracing.DbStore
                 spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds", new { traceIds = traceIds })
                     .Select(s =>
                     {
-                        return new Span()
-                        {
-                            traceId = s.trace_id,
-                            id = s.id,
-                            name = s.name,
-                            parentId = s.parent_id,
-                            timestamp = s.start_ts,
-                            duration = s.duration,
-                            debug = s.debug
-                        };
+                        return new Span(
+                            s.trace_id,
+                            s.name,
+                            s.id,
+                            s.parent_id,
+                            s.start_ts,
+                            s.duration,
+                            debug: s.debug
+                        );
                     }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.AsEnumerable());
 
-                dbAnnotations = conn.Query<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceId order by a_timestamp, a_key", new { traceIds = traceIds })
-                    .GroupBy(a => new KeyValuePair<long, long>(1, 1)).ToDictionary(g => g.Key, g => g.AsEnumerable());
+                dbAnnotations = conn.Query<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceIds order by a_timestamp, a_key", new { traceIds = traceIds })
+                    .GroupBy(a => new KeyValuePair<long, long>(a.trace_id, a.span_id)).ToDictionary(g => g.Key, g => g.AsEnumerable());
             }
 
             List<List<Span>> result = new List<List<Span>>();
             foreach (var spans in spansWithoutAnnotations.Values)
             {
                 List<Span> trace = new List<Span>();
-                foreach (Span s in spans)
+                foreach (Span span in spans)
                 {
-                    Span span = new Span();
-                    var key = new KeyValuePair<long, long>(s.traceId, s.id);
+                    var key = new KeyValuePair<long, long>(span.traceId, span.id);
                     if (dbAnnotations.ContainsKey(key))
                     {
                         foreach (var a in dbAnnotations[key])
@@ -148,8 +148,8 @@ namespace Tracing.DbStore
                             Endpoint endpoint = new Endpoint()
                             {
                                 serviceName = a.endpoint_service_name,
-                                ipv4 = a.endpoint_ipv4.Value,
-                                port = a.endpoint_port
+                                ipv4 = a.endpoint_ipv4 ?? 0,
+                                port = a.endpoint_port ?? 0
                             };
                             if (-1 == a.a_type)
                             {
@@ -157,7 +157,7 @@ namespace Tracing.DbStore
                             }
                             else
                             {
-                                span.binaryAnnotations.Add(new BinaryAnnotation(a.a_key, a.a_value, (BinaryAnnotation.Type)a.a_type, endpoint));
+                                span.binaryAnnotations.Add(new BinaryAnnotation(a.a_key, a.a_value, (AnnotationType)a.a_type, endpoint));
                             }
                         }
                     }
@@ -187,7 +187,7 @@ namespace Tracing.DbStore
             string joinSql = string.Empty;
             foreach (var pair in request.binaryAnnotations)
             {
-                joinSql += " or (a.a_type = " + (int)BinaryAnnotation.Type.STRING +
+                joinSql += " or (a.a_type = " + (int)AnnotationType.STRING +
                     " and a.a_key = '" + pair.Key + " and a.a_value = '" + pair.Value + "')";
             }
             foreach (var key in request.annotations)
@@ -206,7 +206,7 @@ namespace Tracing.DbStore
             }
         }
 
-        public IEnumerable<string> getServiceNames()
+        public IEnumerable<string> GetServiceNames()
         {
             using (IDbConnection conn = OpenConnection())
             {
@@ -216,7 +216,7 @@ namespace Tracing.DbStore
             }
         }
 
-        public IEnumerable<string> getSpanNames(string serviceName)
+        public IEnumerable<string> GetSpanNames(string serviceName)
         {
             using (IDbConnection conn = OpenConnection())
             {
@@ -225,6 +225,11 @@ namespace Tracing.DbStore
                         join zipkin_annotations as a on s.trace_id = a.trace_id and s.id = a.span_id
                     where a.endpoint_service_name = @serviceName", new { serviceName = serviceName });
             }
+        }
+
+        public IEnumerable<DependencyLink> GetDependencies(long endTs, long lookback)
+        {
+            return new List<DependencyLink>();
         }
     }
 

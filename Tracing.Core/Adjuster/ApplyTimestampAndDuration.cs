@@ -4,10 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Tracing.Core.Internal
+namespace Tracing.Core
 {
     public class ApplyTimestampAndDuration
     {
+        public static List<Span> Apply(List<Span> spans)
+        {
+            var newSpans = spans.Select(Apply).Where(s => s.timestamp.HasValue).ToList();
+            newSpans.Sort();
+            return newSpans;
+        }
+
         public static Span Apply(Span s)
         {
             if ((!s.timestamp.HasValue || !s.duration.HasValue) && 0 != s.annotations.Count)

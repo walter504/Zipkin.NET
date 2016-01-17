@@ -11,23 +11,24 @@ namespace Tracing.Core
         /**
          * Name used to lookup spans, such as "http.uri" or "finagle.version".
          */
-        public string key;
-        public byte[] value;
-        public Type type;
-        public Endpoint endpoint;
+        public string key { get; set; }
+        public byte[] value { get; set; }
+        public AnnotationType type { get; set; }
+        public Endpoint endpoint { get; set; }
 
         public BinaryAnnotation(string key, Endpoint endpoint)
-            : this(key, new byte[] { 1 }, Type.BOOL, Ensure.ArgumentNotNull(endpoint, "endpoint"))
+            : this(key, new byte[] { 1 }, AnnotationType.BOOL, Ensure.ArgumentNotNull(endpoint, "endpoint"))
         {
+
         }
 
         /** string values are the only queryable type of binary annotation. */
         public BinaryAnnotation(string key, string value, Endpoint endpoint)
-            : this(key, Encoding.UTF8.GetBytes(value), Type.STRING, endpoint)
+            : this(key, Encoding.UTF8.GetBytes(value), AnnotationType.STRING, endpoint)
         {
         }
 
-        public BinaryAnnotation(string key, byte[] value, Type type, Endpoint endpoint)
+        public BinaryAnnotation(string key, byte[] value, AnnotationType type, Endpoint endpoint)
         {
             this.key = Ensure.ArgumentNotNull(key, "key");
             this.value = Ensure.ArgumentNotNull(value, "value");
@@ -64,23 +65,6 @@ namespace Tracing.Core
             h *= 1000003;
             h ^= (endpoint == null) ? 0 : endpoint.GetHashCode();
             return h;
-        }
-
-        public enum Type
-        {
-            /**
-             * Set to 0x01 when {@link BinaryAnnotation#key} is {@link Constants#CLIENT_ADDR} or  {@link
-             * Constants#SERVER_ADDR}
-             */
-            BOOL = 0,
-            /** No encoding, or type is unknown. */
-            BYTES = 1,
-            I16 = 2,
-            I32 = 3,
-            I64 = 4,
-            DOUBLE = 5,
-            /** The only type zipkin v1 supports search against. */
-            STRING = 6
         }
     }
 }

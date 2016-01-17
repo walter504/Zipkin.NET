@@ -14,7 +14,7 @@ namespace Tracing.Core
             return a == b || (a != null && a.Equals(b));
         }
 
-        public static IList<T> SortedList<T>(Collection<T> input) where T : IComparable<T>
+        public static IList<T> SortedList<T>(IList<T> input) where T : IComparable<T>
         {
             if (input == null || 0 == input.Count) return new Collection<T>();
             if (input.Count == 1) return new ReadOnlyCollection<T>(input);

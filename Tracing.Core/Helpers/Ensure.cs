@@ -33,7 +33,7 @@ namespace Tracing.Core
         /// </summary>
         /// <param name = "value">The argument value to check</param>
         /// <param name = "name">The name of the argument</param>
-        public static void ArgumentNotNullOrEmptyString([ValidatedNotNull]string value, string name)
+        public static void ArgumentNotNullOrEmptystring([ValidatedNotNull]string value, string name)
         {
             ArgumentNotNull(value, name);
             if (!string.IsNullOrWhiteSpace(value)) return;

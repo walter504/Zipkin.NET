@@ -9,29 +9,29 @@ namespace Tracing.Core
 {
     public class Span : IComparable<Span>
     {
-        public long traceId;
-        public string name;
-        public long id;
-        public long? parentId;
-        public long? timestamp;
-        public long? duration;
-        public readonly IList<Annotation> annotations;
-        public readonly IList<BinaryAnnotation> binaryAnnotations;
-        public bool? debug;
+        public long traceId { get; set; }
+        public string name { get; set; }
+        public long id { get; set; }
+        public long? parentId { get; set; }
+        public long? timestamp { get; set; }
+        public long? duration { get; set; }
+        public IList<Annotation> annotations { get; set; }
+        public IList<BinaryAnnotation> binaryAnnotations { get; set; }
+        public bool? debug { get; set; }
 
         public Span()
-        { 
+        {
         }
 
         public Span(long traceId,
-           string name,
-           long id,
-           long? parentId,
-           long? timestamp,
-           long? duration,
-           Collection<Annotation> annotations,
-           Collection<BinaryAnnotation> binaryAnnotations,
-           bool? debug)
+            string name,
+            long id,
+            long? parentId = null,
+            long? timestamp = null,
+            long? duration = null,
+            IList<Annotation> annotations = null,
+            IList<BinaryAnnotation> binaryAnnotations = null,
+            bool? debug = null)
         {
             this.traceId = traceId;
             this.name = name.ToLower(); //checkNotNull(name, "name").toLowerCase();
@@ -39,8 +39,8 @@ namespace Tracing.Core
             this.parentId = parentId;
             this.timestamp = timestamp;
             this.duration = duration;
-            this.annotations = Util.SortedList(annotations);
-            this.binaryAnnotations = new ReadOnlyCollection<BinaryAnnotation>(binaryAnnotations);
+            this.annotations = Util.SortedList(annotations ?? Enumerable.Empty<Annotation>().ToList());
+            this.binaryAnnotations = new ReadOnlyCollection<BinaryAnnotation>(binaryAnnotations ?? Enumerable.Empty<BinaryAnnotation>().ToList());
             this.debug = debug;
         }
 

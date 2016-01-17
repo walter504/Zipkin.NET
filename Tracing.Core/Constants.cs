@@ -19,7 +19,13 @@ namespace Tracing.Core
          * almost always the client. When logging CLIENT_SEND, instrumentation should also log the {@link
          * #SERVER_ADDR}.
          */
-        public const string CLIENT_SEND = "cs";
+        public const string ClientSend = "cs";
+
+        /**
+         * Optionally logs progress of a ({@linkplain #CLIENT_SEND}, {@linkplain #WIRE_SEND}). For
+         * example, this could be one chunk in a chunked request.
+         */
+        public const string ClientSendFragment = "csf";
 
         /**
          * The client received ("cr") a response from a server. There is only one receive per span. For
@@ -33,7 +39,13 @@ namespace Tracing.Core
          * event, almost always the client. The actual endpoint of the server is recorded separately as
          * {@link #SERVER_ADDR} when {@link #CLIENT_SEND} is logged.
          */
-        public const string CLIENT_RECV = "cr";
+        public const string ClientRecv = "cr";
+
+        /**
+         * Optionally logs progress of a ({@linkplain #CLIENT_RECV}, {@linkplain #WIRE_RECV}). For
+         * example, this could be one chunk in a chunked response.
+         */
+        public const string ClientRecvFragment = "crf";
 
         /**
          * The server sent ("ss") a response to a client. There is only one response per span. If there's
@@ -49,7 +61,13 @@ namespace Tracing.Core
          * almost always the server. The actual endpoint of the client is recorded separately as {@link
          * #CLIENT_ADDR} when {@link #SERVER_RECV} is logged.
          */
-        public const string SERVER_SEND = "ss";
+        public const string ServerSend = "ss";
+
+        /**
+         * Optionally logs progress of a ({@linkplain #SERVER_SEND}, {@linkplain #WIRE_SEND}). For
+         * example, this could be one chunk in a chunked response.
+         */
+        public const string ServerSendFragment = "ssf";
 
         /**
          * The server received ("sr") a request from a client. There is only one request per span.  For
@@ -66,45 +84,41 @@ namespace Tracing.Core
          * event, almost always the server. When logging SERVER_RECV, instrumentation should also log the
          * {@link #CLIENT_ADDR}.
          */
-        public const string SERVER_RECV = "sr";
+        public const string ServerRecv = "sr";
+
+        /**
+         * Optionally logs progress of a ({@linkplain #SERVER_RECV}, {@linkplain #WIRE_RECV}). For
+         * example, this could be one chunk in a chunked request.
+         */
+        public const string ServerRecvFragment = "srf";
+
+        /**
+         * When present, {@link BinaryAnnotation#endpoint} indicates a client address ("ca") in a span.
+         * Most likely, there's only one. Multiple addresses are possible when a client changes its ip or
+         * port within a span.
+         */
+        public const string ClientAddr = "ca";
+
+        /**
+         * When present, {@link BinaryAnnotation#endpoint} indicates a server address ("sa") in a span.
+         * Most likely, there's only one. Multiple addresses are possible when a client is redirected, or
+         * fails to a different server ip or port.
+         */
+        public const string ServerAddr = "sa";
 
         /**
          * Optionally logs an attempt to send a message on the wire. Multiple wire send events could
          * indicate network retries. A lag between client or server send and wire send might indicate
          * queuing or processing delay.
          */
-        public const string WIRE_SEND = "ws";
+        public const string WireSend = "ws";
 
         /**
          * Optionally logs an attempt to receive a message from the wire. Multiple wire receive events
          * could indicate network retries. A lag between wire receive and client or server receive might
          * indicate queuing or processing delay.
          */
-        public const string WIRE_RECV = "wr";
-
-        /**
-         * Optionally logs progress of a ({@linkplain #CLIENT_SEND}, {@linkplain #WIRE_SEND}). For
-         * example, this could be one chunk in a chunked request.
-         */
-        public const string CLIENT_SEND_FRAGMENT = "csf";
-
-        /**
-         * Optionally logs progress of a ({@linkplain #CLIENT_RECV}, {@linkplain #WIRE_RECV}). For
-         * example, this could be one chunk in a chunked response.
-         */
-        public const string CLIENT_RECV_FRAGMENT = "crf";
-
-        /**
-         * Optionally logs progress of a ({@linkplain #SERVER_SEND}, {@linkplain #WIRE_SEND}). For
-         * example, this could be one chunk in a chunked response.
-         */
-        public const string SERVER_SEND_FRAGMENT = "ssf";
-
-        /**
-         * Optionally logs progress of a ({@linkplain #SERVER_RECV}, {@linkplain #WIRE_RECV}). For
-         * example, this could be one chunk in a chunked request.
-         */
-        public const string SERVER_RECV_FRAGMENT = "srf";
+        public const string WireRecv = "wr";
 
         /**
          * The {@link BinaryAnnotation#value value} of "lc" is the component or namespace of a local
@@ -129,20 +143,6 @@ namespace Tracing.Core
          * Span.name, for example "finatra/bootstrap" vs "finch/bootstrap". Using local component, you'd
          * search for spans named "bootstrap" where "lc=finch"
          */
-        public const string LOCAL_COMPONENT = "lc";
-
-        /**
-         * When present, {@link BinaryAnnotation#endpoint} indicates a client address ("ca") in a span.
-         * Most likely, there's only one. Multiple addresses are possible when a client changes its ip or
-         * port within a span.
-         */
-        public const string CLIENT_ADDR = "ca";
-
-        /**
-         * When present, {@link BinaryAnnotation#endpoint} indicates a server address ("sa") in a span.
-         * Most likely, there's only one. Multiple addresses are possible when a client is redirected, or
-         * fails to a different server ip or port.
-         */
-        public const string SERVER_ADDR = "sa";
+        public const string LocalComponent = "lc";
     }
 }

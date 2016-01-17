@@ -8,7 +8,7 @@ using Tracing.Core;
 
 namespace Tracing.WebApi.Controllers
 {
-    [Route("api/v1")]
+    [RoutePrefix("api/v1")]
     public class TraceController : ApiController
     {
         const int defaultLookback = 86400000; // 7 days in millis
@@ -112,8 +112,8 @@ namespace Tracing.WebApi.Controllers
         [Route("trace/{traceId}")]
         public IHttpActionResult GetTrace(long traceId)
         {
-            List<List<Span>> traces = spanStore.GetTracesByIds(new long[]{traceId});
-            if (traces.Count == 0)
+            var traces = spanStore.GetTracesByIds(new long[]{traceId});
+            if (traces.Count() == 0)
             {
                 return NotFound();
             }
