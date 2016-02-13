@@ -60,8 +60,8 @@ namespace Zipkin.Core
             string spanName,
             IList<string> annotations,
             IDictionary<string, string> binaryAnnotations,
-            long minDuration,
-            long maxDuration,
+            long? minDuration,
+            long? maxDuration,
             long? endTs,
             long? lookback,
             int? limit)
@@ -85,7 +85,7 @@ namespace Zipkin.Core
             }
             this.minDuration = minDuration;
             this.maxDuration = maxDuration;
-            this.endTs = endTs ?? Util.GetCurrentTimeStamp();
+            this.endTs = endTs ?? Util.CurrentTimeMilliSeconds();
             this.lookback = Math.Min(lookback ?? this.endTs, this.endTs);
             this.limit = limit ?? 10;
         }

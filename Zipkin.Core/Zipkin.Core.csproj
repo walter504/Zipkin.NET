@@ -44,6 +44,7 @@
     <Compile Include="Common\AnnotationType.cs" />
     <Compile Include="Common\Annotation.cs" />
     <Compile Include="Common\BinaryAnnotation.cs" />
+    <Compile Include="Common\Trace.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Common\DependencyLink.cs" />
     <Compile Include="Common\Endpoint.cs" />

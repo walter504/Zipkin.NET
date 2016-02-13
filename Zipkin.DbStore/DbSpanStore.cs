@@ -37,7 +37,7 @@ namespace Zipkin.DbStore
                     if (!binaryAnnotationTimestamp.HasValue)
                     {
                         // fallback if we have no timestamp, yet
-                        binaryAnnotationTimestamp = Util.GetCurrentTimeStamp();
+                        binaryAnnotationTimestamp = Util.CurrentTimeMilliSeconds() * 1000;
                     }
                     var spanEntity = new zipkin_spans()
                     {
@@ -46,8 +46,8 @@ namespace Zipkin.DbStore
                         name = span.name,
                         parent_id = span.parentId,
                         debug = span.debug,
-                        start_ts = span.timestamp.Value,
-                        duration = span.duration.Value
+                        start_ts = span.timestamp,
+                        duration = span.duration
                     };
                     conn.Execute(@"replace into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
                         values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)", spanEntity, transaction);
@@ -114,7 +114,7 @@ namespace Zipkin.DbStore
             {
                 if (request != null)
                 {
-                    traceIds = GetTraceIdsByQuery(request);
+                    traceIds = conn.Query<long>(GetTraceIdQuery(request));
                 }
                 spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds", new { traceIds = traceIds })
                     .Select(s =>
@@ -145,12 +145,17 @@ namespace Zipkin.DbStore
                     {
                         foreach (var a in dbAnnotations[key])
                         {
-                            Endpoint endpoint = new Endpoint()
+                            Endpoint endpoint = null;
+                            if (!string.IsNullOrEmpty(a.endpoint_service_name)
+                                && a.endpoint_ipv4.HasValue && a.endpoint_port.HasValue)
                             {
-                                serviceName = a.endpoint_service_name,
-                                ipv4 = a.endpoint_ipv4 ?? 0,
-                                port = a.endpoint_port ?? 0
-                            };
+                                endpoint = new Endpoint()
+                                {
+                                    serviceName = a.endpoint_service_name,
+                                    ipv4 = a.endpoint_ipv4.Value,
+                                    port = a.endpoint_port.Value
+                                };
+                            }
                             if (-1 == a.a_type)
                             {
                                 span.annotations.Add(new Annotation(a.a_timestamp.Value, a.a_key, endpoint));
@@ -170,40 +175,63 @@ namespace Zipkin.DbStore
             return result;
         }
 
-        private IEnumerable<long> GetTraceIdsByQuery(QueryRequest request)
+        private string GetTraceIdQuery(QueryRequest request)
         {
             long endTs = (request.endTs > 0 && request.endTs != long.MaxValue)
-                ? request.endTs * 1000 : Util.GetCurrentTimeStamp() * 1000;
-            string condition = " where s.start_ts > " + request.lookback * 1000
-                + " and s.start_ts <= " + endTs;
-            if (!string.IsNullOrEmpty(request.spanName))
+                ? request.endTs * 1000 : Util.CurrentTimeMilliSeconds() * 1000;
+
+            var query = new StringBuilder();
+            query.Append("select distinct s.trace_id from zipkin_spans as s"
+                + " join zipkin_annotations as a"
+                + " on s.trace_id = a.trace_id"
+                + " and s.id = a.span_id");
+            var keyToTables = new Dictionary<string, string>();
+            int i = 0;
+            foreach (var key in request.binaryAnnotations.Keys)
             {
-                condition += " and s.name = '" + request.spanName + "'";
-            }
-            if (request.minDuration.HasValue && request.maxDuration.HasValue)
-            {
-                condition += " and s.duration > " + request.minDuration + " and s.start_ts <= " + request.maxDuration;
-            }
-            string joinSql = string.Empty;
-            foreach (var pair in request.binaryAnnotations)
-            {
-                joinSql += " or (a.a_type = " + (int)AnnotationType.STRING +
-                    " and a.a_key = '" + pair.Key + " and a.a_value = '" + pair.Value + "')";
+                keyToTables.Add(key, "a" + i++);
+                query.Append(Join(keyToTables[key], key, (int)AnnotationType.STRING));
             }
             foreach (var key in request.annotations)
             {
-                joinSql += " or (a.a_type = -1 and a.a_key = '" + key + "')";
+                keyToTables.Add(key, "a" + i++);
+                query.Append(Join(keyToTables[key], key, -1));
             }
-            if (!string.IsNullOrEmpty(joinSql))
+            query.Append(" where s.start_ts >= ");
+            query.Append(endTs - request.lookback * 1000);
+            query.Append(" and s.start_ts < ");
+            query.Append(endTs);
+            query.Append(" and a.endpoint_service_name = '");
+            query.Append(request.serviceName);
+            query.Append("'");
+            if (!string.IsNullOrEmpty(request.spanName))
             {
-                joinSql = " join zipkin_annotations as a on s.trace_id = a.trace_id and s.id = a.span_id and (1=2 " + joinSql + ")";
+                query.Append(" and s.name = '");
+                query.Append(request.spanName);
+                query.Append("'");
             }
-            string query = "select distinct s.trace_id from zipkin_spans as s" + joinSql + condition;
+            if (request.minDuration.HasValue)
+            {
+                query.Append(" and s.duration >= ");
+                query.Append(request.minDuration);
+            }
+            if (request.maxDuration.HasValue)
+            {
+                query.Append(" and s.duration < ");
+                query.Append(request.maxDuration);
+            }
+            query.Append(" order by s.start_ts desc limit ");
+            query.Append(request.limit);
+            return query.ToString();
+        }
 
-            using (IDbConnection conn = OpenConnection())
-            {
-                return conn.Query<long>(query);
-            }
+        private string Join(string joinTable, string key, int type)
+        {
+            return string.Format(" join zipkin_annotations as {0}"
+                + " on s.trace_id = {0}.trace_id"
+                + " and s.id = {0}.span_id"
+                + " and {0}.a_type = " + (int)AnnotationType.STRING
+                + " and {0}.a_key = '" + key + "'", joinTable);
         }
 
         public IEnumerable<string> GetServiceNames()

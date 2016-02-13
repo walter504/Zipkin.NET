@@ -14,8 +14,8 @@ namespace Zipkin.Core.Json
         public string parentId { get; set; }
         public long? timestamp { get; set; }
         public long? duration { get; set; }
-        public IList<JsonAnnotation> annotations { get; set; }
-        public IList<JsonBinaryAnnotation> binaryAnnotations { get; set; }
+        public List<JsonAnnotation> annotations { get; set; }
+        public List<JsonBinaryAnnotation> binaryAnnotations { get; set; }
         public bool? debug { get; set; }
 
         public JsonSpan()
@@ -24,10 +24,10 @@ namespace Zipkin.Core.Json
 
         public JsonSpan(Span span)
         {
-            traceId = LongToHex(span.traceId);
-            name = name;
-            id = LongToHex(span.id);
-            parentId = span.parentId.HasValue ? LongToHex(span.parentId.Value) : null;
+            traceId = Util.LongToHex(span.traceId);
+            name = span.name;
+            id = Util.LongToHex(span.id);
+            parentId = span.parentId.HasValue ? Util.LongToHex(span.parentId.Value) : null;
             timestamp = span.timestamp;
             duration = span.duration;
             if (null != span.annotations)
@@ -43,25 +43,15 @@ namespace Zipkin.Core.Json
 
         public Span Invert()
         {
-            return new Span(HexToLong(traceId),
+            return new Span(Util.HexToLong(traceId),
                 name,
-                HexToLong(id),
-                string.IsNullOrEmpty(parentId) ? null : new Nullable<long>(HexToLong(parentId)),
+                Util.HexToLong(id),
+                string.IsNullOrEmpty(parentId) ? null : new Nullable<long>(Util.HexToLong(parentId)),
                 timestamp,
                 duration,
                 annotations == null ? new List<Annotation>() : annotations.Select(a => a.Invert()).ToList(),
                 annotations == null ? new List<BinaryAnnotation>() : binaryAnnotations.Select(a => a.Invert()).ToList(),
                 debug);
-        }
-
-        private long HexToLong(string hex)
-        {
-            return long.Parse(hex, System.Globalization.NumberStyles.HexNumber);
-        }
-
-        private string LongToHex(long input)
-        {
-            return input.ToString("x4");
         }
     }
 }

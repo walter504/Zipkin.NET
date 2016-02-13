@@ -13,8 +13,8 @@ namespace Zipkin.DbStore.Models
         public string name { get; set; }
         public long? parent_id { get; set; }
         public bool? debug { get; set; }
-        public long start_ts { get; set; }
-        public long duration { get; set; }
+        public long? start_ts { get; set; }
+        public long? duration { get; set; }
 
     }
 }

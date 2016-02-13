@@ -19,6 +19,21 @@ namespace Zipkin.Core
         public IList<BinaryAnnotation> binaryAnnotations { get; set; }
         public bool? debug { get; set; }
 
+        public IEnumerable<string> ServiceNames
+        {
+            get {
+                return this.Endpoints.Where(e => !string.IsNullOrEmpty(e.serviceName)).Select(e => e.serviceName);
+            } 
+        }
+
+        public IEnumerable<Endpoint> Endpoints
+        { 
+            get 
+            {
+                return this.annotations.Select(a => a.endpoint).Concat(this.binaryAnnotations.Select(ba => ba.endpoint));
+            } 
+        }
+
         public Span()
         {
         }

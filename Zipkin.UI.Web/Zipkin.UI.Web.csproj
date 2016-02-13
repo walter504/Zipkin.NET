@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CC85452C-9EFB-488F-AD46-45F0CC2EC17E}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Zipkin.UI.Web</RootNamespace>
+    <AssemblyName>Zipkin.UI.Web</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net451\RestSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Web.config" />
+    <Content Include="app\libs\bootstrap-datepicker\.bower.json" />
+    <Content Include="app\libs\bootstrap\.bower.json" />
+    <Content Include="app\libs\bootstrap\css\bootstrap.css.map" />
+    <Content Include="app\libs\bootstrap\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="app\libs\bootstrap\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="app\libs\bootstrap\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="app\libs\chosen\.bower.json" />
+    <Content Include="app\libs\d3\.bower.json" />
+    <Content Include="app\libs\d3\bower.json" />
+    <Content Include="app\libs\d3\CONTRIBUTING.md" />
+    <Content Include="app\libs\d3\LICENSE" />
+    <Content Include="app\libs\d3\README.md" />
+    <Content Include="app\libs\dagre-d3\.bower.json" />
+    <Content Include="app\libs\dagre-d3\bower.json" />
+    <Content Include="app\libs\es5-shim\.bower.json" />
+    <Content Include="app\libs\es5-shim\.gitignore" />
+    <Content Include="app\libs\flight\.bower.json" />
+    <Content Include="app\libs\jquery-cookie\.bower.json" />
+    <Content Include="app\libs\jquery-timeago\.bower.json" />
+    <Content Include="app\libs\jquery\.bower.json" />
+    <Content Include="app\libs\jquery\jquery.min.map" />
+    <Content Include="app\libs\momentjs\.bower.json" />
+    <Content Include="app\libs\requirejs\.bower.json" />
+    <Content Include="Views\Dependency\Index.cshtml" />
+    <Content Include="Views\Traces\Index.cshtml" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="app\css\dependency.css" />
+    <Content Include="app\css\main.css" />
+    <Content Include="app\css\summary.css" />
+    <Content Include="app\css\trace.css" />
+    <Content Include="app\css\traces.css" />
+    <Content Include="app\js\component_data\dependency.js" />
+    <Content Include="app\js\component_data\serviceNames.js" />
+    <Content Include="app\js\component_data\spanNames.js" />
+    <Content Include="app\js\component_ui\backToTop.js" />
+    <Content Include="app\js\component_ui\dependencyGraph.js" />
+    <Content Include="app\js\component_ui\filterAllServices.js" />
+    <Content Include="app\js\component_ui\filterLabel.js" />
+    <Content Include="app\js\component_ui\fullPageSpinner.js" />
+    <Content Include="app\js\component_ui\goToTrace.js" />
+    <Content Include="app\js\component_ui\infoButton.js" />
+    <Content Include="app\js\component_ui\infoPanel.js" />
+    <Content Include="app\js\component_ui\serviceDataModal.js" />
+    <Content Include="app\js\component_ui\serviceFilterSearch.js" />
+    <Content Include="app\js\component_ui\serviceName.js" />
+    <Content Include="app\js\component_ui\spanName.js" />
+    <Content Include="app\js\component_ui\spanPanel.js" />
+    <Content Include="app\js\component_ui\timeStamp.js" />
+    <Content Include="app\js\component_ui\trace.js" />
+    <Content Include="app\js\component_ui\traceFilters.js" />
+    <Content Include="app\js\component_ui\traces.js" />
+    <Content Include="app\js\component_ui\zoomOutSpans.js" />
+    <Content Include="app\js\main.js" />
+    <Content Include="app\js\page\default.js" />
+    <Content Include="app\js\page\dependency.js" />
+    <Content Include="app\js\page\trace.js" />
+    <Content Include="app\libs\bootstrap-datepicker\css\datepicker3.css" />
+    <Content Include="app\libs\bootstrap-datepicker\js\bootstrap-datepicker.js" />
+    <Content Include="app\libs\bootstrap\css\bootstrap.min.css" />
+    <Content Include="app\libs\bootstrap\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="app\libs\bootstrap\js\bootstrap.min.js" />
+    <Content Include="app\libs\chosen\chosen-sprite%402x.png" />
+    <Content Include="app\libs\chosen\chosen-sprite.png" />
+    <Content Include="app\libs\chosen\chosen.jquery.min.js" />
+    <Content Include="app\libs\chosen\chosen.min.css" />
+    <Content Include="app\libs\d3\d3.js" />
+    <Content Include="app\libs\d3\d3.min.js" />
+    <Content Include="app\libs\dagre-d3\js\dagre-d3.js" />
+    <Content Include="app\libs\dagre-d3\js\dagre-d3.min.js" />
+    <Content Include="app\libs\es5-shim\es5-sham.min.js" />
+    <Content Include="app\libs\es5-shim\es5-shim.min.js" />
+    <Content Include="app\libs\flight\lib\advice.js" />
+    <Content Include="app\libs\flight\lib\base.js" />
+    <Content Include="app\libs\flight\lib\component.js" />
+    <Content Include="app\libs\flight\lib\compose.js" />
+    <Content Include="app\libs\flight\lib\debug.js" />
+    <Content Include="app\libs\flight\lib\index.js" />
+    <Content Include="app\libs\flight\lib\logger.js" />
+    <Content Include="app\libs\flight\lib\registry.js" />
+    <Content Include="app\libs\flight\lib\utils.js" />
+    <Content Include="app\libs\jquery-cookie\jquery.cookie.js" />
+    <Content Include="app\libs\jquery-timeago\jquery.timeago.js" />
+    <Content Include="app\libs\jquery\jquery.min.js" />
+    <Content Include="app\libs\momentjs\min\moment.min.js" />
+    <Content Include="app\libs\requirejs\require.js" />
+    <Content Include="Global.asax" />
+    <Content Include="Web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\DependencyController.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\TracesController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TraceSummary.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Zipkin.Core\Zipkin.Core.csproj">
+      <Project>{695dd045-6870-4575-94bb-93f6ed9d6342}</Project>
+      <Name>Zipkin.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Helpers\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>10855</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:8080/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

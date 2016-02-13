@@ -23,10 +23,51 @@ namespace Zipkin.Core
             return new ReadOnlyCollection<T>(result);
         }
 
-        public static long GetCurrentTimeStamp()
+        protected static readonly DateTime unixTPStart =
+            TimeZone.CurrentTimeZone.ToUniversalTime(new DateTime(1970, 1, 1));
+
+        public static long CurrentTimeSeconds()
         {
-            var t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-            return Convert.ToInt64(t.TotalMilliseconds * 1000);
+            return ToUnixTimeSeconds(DateTime.UtcNow);
+        }
+
+        public static long CurrentTimeMilliSeconds()
+        {
+            var toNow = DateTime.UtcNow - unixTPStart;
+            return (long)Math.Round(toNow.TotalMilliseconds);
+        }
+
+        public static long ToUnixTimeSeconds(DateTime dt)
+        {
+            TimeSpan toNow = dt.ToUniversalTime().Subtract(unixTPStart);
+            return (long)Math.Round(toNow.TotalSeconds);
+        }
+
+        public static long ToUnixTimeMilliseconds(DateTime dt)
+        {
+            TimeSpan toNow = dt.ToUniversalTime().Subtract(unixTPStart);
+            return (long)Math.Round(toNow.TotalMilliseconds);
+        }
+
+        public static DateTime FromUnixTimeSeconds(long seconds)
+        {
+            return unixTPStart.AddSeconds(seconds);
+        }
+
+        public static DateTime FromUnixTimeMilliseconds(long seconds)
+        {
+            return unixTPStart.AddMilliseconds(seconds);
+        }
+
+
+        public static long HexToLong(string hex)
+        {
+            return long.Parse(hex, System.Globalization.NumberStyles.HexNumber);
+        }
+
+        public static string LongToHex(long input)
+        {
+            return input.ToString("x4");
         }
     }
 }

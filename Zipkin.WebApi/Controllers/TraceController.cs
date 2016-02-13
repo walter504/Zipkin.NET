@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using Zipkin.Core;
+using Zipkin.Core.Json;
 
 namespace Zipkin.WebApi.Controllers
 {
@@ -12,6 +13,7 @@ namespace Zipkin.WebApi.Controllers
     public class TraceController : ApiController
     {
         const int defaultLookback = 86400000; // 7 days in millis
+        const int defaultLimit = 10;
 
         private readonly ISpanStore spanStore;
         private readonly SpanWriter spanWriter;
@@ -69,12 +71,16 @@ namespace Zipkin.WebApi.Controllers
             string serviceName,
             string spanName = "all",
             string annotationQuery = null,
-            long minDuration = 0,
-            long maxDuration = 0,
-            long endT = 0,
+            long? minDuration = null,
+            long? maxDuration = null,
+            long? endTs = null,
             long lookback = defaultLookback,
-            int limit = 0)
+            int limit = defaultLimit)
         {
+            if (!endTs.HasValue)
+            {
+                endTs = Util.ToUnixTimeMilliseconds(DateTime.Now);
+            }
             List<string> annotations = new List<string>();
             Dictionary<string, string> binaryAnnotations = new Dictionary<string, string>();
             if (!string.IsNullOrEmpty(annotationQuery))
@@ -103,10 +109,10 @@ namespace Zipkin.WebApi.Controllers
                 binaryAnnotations,
                 minDuration,
                 maxDuration,
-                endT,
+                endTs,
                 lookback,
                 limit);
-            return Ok(spanStore.GetTraces(request));
+            return Ok(spanStore.GetTraces(request).Select(t => t.Select(s => new JsonSpan(s))));
         }
 
         [Route("trace/{traceId}")]
@@ -117,7 +123,7 @@ namespace Zipkin.WebApi.Controllers
             {
                 return NotFound();
             }
-            return Ok(traces.First());
+            return Ok(traces.First().Select(s => new JsonSpan(s)));
         }
         
     }
