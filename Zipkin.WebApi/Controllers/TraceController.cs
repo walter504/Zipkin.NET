@@ -12,7 +12,7 @@ namespace Zipkin.WebApi.Controllers
     [RoutePrefix("api/v1")]
     public class TraceController : ApiController
     {
-        const int defaultLookback = 86400000; // 7 days in millis
+        const int defaultLookback = 3600 * 24 * 7 * 1000; // 7 days in millis
         const int defaultLimit = 10;
 
         private readonly ISpanStore spanStore;
@@ -22,6 +22,12 @@ namespace Zipkin.WebApi.Controllers
         {
             this.spanStore = spanStore;
             this.spanWriter = spanWriter;
+        }
+
+        [Route("dependencies")]
+        public IHttpActionResult GetDependencies(long endTs, long? lookback = null)
+        {
+            return Ok(spanStore.GetDependencies(endTs, lookback ?? defaultLookback));
         }
 
         /// <summary>

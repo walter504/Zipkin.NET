@@ -8,7 +8,7 @@ namespace Zipkin.UI.Web.Controllers
 {
     public class TracesController : Controller
     {
-        // GET: Traces
+        [Route("traces/{id}")]
         public ActionResult Index(string id)
         {
             return View();

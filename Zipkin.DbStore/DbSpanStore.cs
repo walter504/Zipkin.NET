@@ -181,10 +181,9 @@ namespace Zipkin.DbStore
                 ? request.endTs * 1000 : Util.CurrentTimeMilliSeconds() * 1000;
 
             var query = new StringBuilder();
-            query.Append("select distinct s.trace_id from zipkin_spans as s"
-                + " join zipkin_annotations as a"
-                + " on s.trace_id = a.trace_id"
-                + " and s.id = a.span_id");
+            query.Append(@"select distinct s.trace_id from zipkin_spans as s
+                    join zipkin_annotations as a
+                        on s.trace_id = a.trace_id and s.id = a.span_id");
             var keyToTables = new Dictionary<string, string>();
             int i = 0;
             foreach (var key in request.binaryAnnotations.Keys)
@@ -227,10 +226,10 @@ namespace Zipkin.DbStore
 
         private string Join(string joinTable, string key, int type)
         {
-            return string.Format(" join zipkin_annotations as {0}"
-                + " on s.trace_id = {0}.trace_id"
-                + " and s.id = {0}.span_id"
-                + " and {0}.a_type = " + (int)AnnotationType.STRING
+            return string.Format(@" join zipkin_annotations as {0}
+                on s.trace_id = {0}.trace_id
+                    and s.id = {0}.span_id
+                    and {0}.a_type = " + (int)AnnotationType.STRING
                 + " and {0}.a_key = '" + key + "'", joinTable);
         }
 
@@ -255,10 +254,51 @@ namespace Zipkin.DbStore
             }
         }
 
-        public IEnumerable<DependencyLink> GetDependencies(long endTs, long lookback)
+        public IEnumerable<DependencyLink> GetDependencies(long endTs, long? lookback)
         {
-            return new List<DependencyLink>();
+            endTs = endTs * 1000;
+            using (IDbConnection conn = OpenConnection())
+            {
+                var parentChild = conn.Query(@"select trace_id, parent_id, id
+                        from zipkin_spans 
+                        where parent_id is not null
+                            and start_ts <= " + endTs
+                        + (lookback.HasValue ? (" and start_ts > " + (endTs - lookback.Value * 1000)) : ""))
+                    .Select(r => new { trace_id = (long)r.trace_id, parent_id = (long)r.parent_id, id = (long)r.id})
+                    .GroupBy(r => r.trace_id).ToDictionary(g => g.Key, g => g.ToList());
+
+                var traceSpanServiceName = conn.Query(@"select distinct trace_id, span_id, endpoint_service_name
+                        from zipkin_annotations 
+                        where trace_id in @traceIds
+                            and a_key in ('sr', 'sa') 
+                            and endpoint_service_name is not null
+                        group by trace_id, span_id", new { traceIds = parentChild.Keys.ToArray() })
+                    .ToDictionary(r => new KeyValuePair<long, long>(r.trace_id, r.span_id), r => (string)r.endpoint_service_name);
+
+                // links are merged by mapping to parent/child and summing corresponding links
+                var dictLink = new Dictionary<KeyValuePair<string, string>, long>();
+
+                parentChild.Values.SelectMany(p => p).ToList().ForEach(r => {
+                    string parent;
+                    if (traceSpanServiceName.TryGetValue(new KeyValuePair<long, long>(r.trace_id, r.parent_id), out parent))
+                    {
+                        string child;
+                        if (traceSpanServiceName.TryGetValue(new KeyValuePair<long, long>(r.trace_id, r.id), out child))
+                        {
+                            var kvp = new KeyValuePair<string, string>(parent, child);
+                            if (dictLink.ContainsKey(kvp))
+                            {
+                                dictLink[kvp] += 1;
+                            }
+                            else
+                            {
+                                dictLink.Add(kvp, 1L);
+                            }
+                        }
+                    }
+                });
+                return dictLink.Select(kvp => new DependencyLink(kvp.Key.Key, kvp.Key.Value, kvp.Value));
+            }
         }
     }
-
 }

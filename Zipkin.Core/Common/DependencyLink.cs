@@ -8,13 +8,13 @@ namespace Zipkin.Core
 {
     public class DependencyLink
     {
-        public readonly string parent;
+        public string parent { get; set; }
 
-        public readonly string child;
+        public string child { get; set; }
 
-        public readonly long callCount;
+        public long callCount { get; set; }
 
-        DependencyLink(string parent, string child, long callCount)
+        public DependencyLink(string parent, string child, long callCount)
         {
             this.parent = Ensure.ArgumentNotNull(parent, "parent").ToLower();
             this.child = Ensure.ArgumentNotNull(child, "child").ToLower();

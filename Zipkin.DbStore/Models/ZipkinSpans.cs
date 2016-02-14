@@ -15,6 +15,5 @@ namespace Zipkin.DbStore.Models
         public bool? debug { get; set; }
         public long? start_ts { get; set; }
         public long? duration { get; set; }
-
     }
 }

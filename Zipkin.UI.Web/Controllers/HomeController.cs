@@ -28,7 +28,6 @@ namespace Zipkin.UI.Web.Controllers
             ViewBag.Services = new List<object>();
             ViewBag.Spans = new List<string>();
 
-            
             var spans = new List<string>();
             var traces = new List<TraceSummary>();
             if (!string.IsNullOrEmpty(serviceName))
@@ -41,8 +40,8 @@ namespace Zipkin.UI.Web.Controllers
                 {
                     tracesReq.AddParameter(key, Request.QueryString[key]);
                 }
-                var reponse = client.Execute<List<List<JsonSpan>>>(tracesReq);
-                traces = reponse.Data
+                var response = client.Execute<List<List<JsonSpan>>>(tracesReq);
+                traces = response.Data
                     .Select(t => TraceSummary.Create(t.Select(js => js.Invert())))
                     .Where(ts => ts != null).ToList();
             }

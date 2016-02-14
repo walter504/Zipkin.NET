@@ -12,12 +12,7 @@ namespace Zipkin.UI.Web
         public static void RegisterRoutes(RouteCollection routes)
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
-
-            routes.MapRoute(
-                name: "Trace",
-                url: "traces/{id}",
-                defaults: new { controller = "Traces", action = "Index" }
-            );
+            routes.MapMvcAttributeRoutes(); 
 
             routes.MapRoute(
                 name: "Default",

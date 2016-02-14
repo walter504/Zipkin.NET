@@ -60,6 +60,6 @@ namespace Zipkin.Core
          * @return dependency links in an interval contained by (endTs - lookback) or empty if none are
          *         found
          */
-        IEnumerable<DependencyLink> GetDependencies(long endTs, long lookback);
+        IEnumerable<DependencyLink> GetDependencies(long endTs, long? lookback);
     }
 }
