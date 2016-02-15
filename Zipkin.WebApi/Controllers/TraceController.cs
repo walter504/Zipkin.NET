@@ -55,9 +55,9 @@ namespace Zipkin.WebApi.Controllers
         /// </summary>
         /// <param name="spans"></param>
         [Route("spans")]
-        public void PostSpans([FromBody]IEnumerable<Span> spans)
+        public void PostSpans([FromBody]IEnumerable<JsonSpan> spans)
         {
-            spanWriter.Write(spanStore, spans);
+            spanWriter.Write(spanStore, spans.Select(js => js.Invert()).ToList());
         }
 
         /// <summary>
