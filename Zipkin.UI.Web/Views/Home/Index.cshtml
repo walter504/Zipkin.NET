@@ -110,7 +110,7 @@
                 <div class="trace-details services">
                     @foreach (var sd in trace.serviceDurations)
                     {
-                        <span class="label label-default service-filter-label" data-service-name="@sd.name">@sd.name x(@sd.count) (@sd.max) ms</span>
+                        <span class="label label-default service-filter-label" data-service-name="@sd.name">@sd.name x@(sd.count) @(sd.max)ms</span>
                     }
                 </div>
                 <div class="trace-details timestamp pull-right">

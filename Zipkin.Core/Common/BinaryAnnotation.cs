@@ -16,10 +16,17 @@ namespace Zipkin.Core
         public AnnotationType type { get; set; }
         public Endpoint endpoint { get; set; }
 
+        public string serviceName
+        {
+            get
+            {
+                return endpoint == null ? string.Empty : endpoint.serviceName;
+            }
+        }
+
         public BinaryAnnotation(string key, Endpoint endpoint)
             : this(key, new byte[] { 1 }, AnnotationType.BOOL, Ensure.ArgumentNotNull(endpoint, "endpoint"))
         {
-
         }
 
         /** string values are the only queryable type of binary annotation. */

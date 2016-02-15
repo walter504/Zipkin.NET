@@ -12,6 +12,14 @@ namespace Zipkin.Core
         public string value { get; set; }
         public Endpoint endpoint { get; set; }
 
+        public string serviceName
+        {
+            get
+            {
+                return endpoint == null ? string.Empty : endpoint.serviceName;
+            }
+        }
+
         public Annotation(long timestamp, string value, Endpoint endpoint)
         {
             this.timestamp = timestamp;

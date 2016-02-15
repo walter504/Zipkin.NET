@@ -5,6 +5,8 @@ using System.Web;
 using Tracing.Core;
 using Zipkin.Core;
 
+using WebUtil = Zipkin.UI.Web.Helpers.Util;
+
 namespace Zipkin.UI.Web
 {
     public class TraceSummary
@@ -45,6 +47,18 @@ namespace Zipkin.UI.Web
                 }
             }
             return results;
+        }
+
+        public static Dictionary<long, int> ToSpanDepths(IEnumerable<Span> spans)
+        {
+            var result = new Dictionary<long, int>();
+            var span = WebUtil.GetRootMostSpan(spans);
+            if (span != null)
+            {
+                var spanNode = SpanNode.Create(span, spans);
+                result = spanNode.Depths(1);
+            }
+            return result;
         }
     }
 

@@ -19,11 +19,58 @@ namespace Zipkin.Core
         public IList<BinaryAnnotation> binaryAnnotations { get; set; }
         public bool? debug { get; set; }
 
+        public List<Annotation> clientSideAnnotations 
+        { 
+            get 
+            {
+                return annotations.Where(a => Constants.CoreClient.Contains(a.value)).ToList();
+            }
+        }
+
+        public List<Annotation> serverSideAnnotations
+        {
+            get
+            {
+                return annotations.Where(a => Constants.CoreServer.Contains(a.value)).ToList();
+            }
+        }
+
         public IEnumerable<string> ServiceNames
         {
-            get {
+            get 
+            {
                 return this.Endpoints.Where(e => !string.IsNullOrEmpty(e.serviceName)).Select(e => e.serviceName);
             } 
+        }
+
+        public string ServiceName
+        {
+            get
+            {
+                // Most authoritative is the label of the server's endpoint
+                var name = binaryAnnotations.Where(ba => ba.key == Constants.ServerAddr).Select(ba => ba.serviceName).FirstOrDefault();
+                if (string.IsNullOrEmpty(name))
+                {
+                    // Next, the label of any server annotation, logged by an instrumented server
+                    name = serverSideAnnotations.Select(a => a.serviceName).FirstOrDefault();
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        // Next is the label of the client's endpoint
+                        name = binaryAnnotations.Where(ba => ba.key == Constants.ClientAddr).Select(ba => ba.serviceName).FirstOrDefault();
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            // Next is the label of any client annotation, logged by an instrumented client
+                            name = clientSideAnnotations.Select(a => a.serviceName).FirstOrDefault();
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                // Finally is the label of the local component's endpoint
+                                name = binaryAnnotations.Where(ba => ba.key == Constants.LocalComponent).Select(ba => ba.serviceName).FirstOrDefault();
+                            }
+                        }
+                    }
+                }
+                return name;
+            }
         }
 
         public IEnumerable<Endpoint> Endpoints

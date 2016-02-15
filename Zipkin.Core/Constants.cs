@@ -144,5 +144,30 @@ namespace Zipkin.Core
          * search for spans named "bootstrap" where "lc=finch"
          */
         public const string LocalComponent = "lc";
+
+        public static IEnumerable<string> CoreClient = new List<string>() { ClientSend, ClientSendFragment, ClientRecv, ClientRecvFragment };
+        public static IEnumerable<string> CoreServer = new List<string>() { ServerRecv, ServerRecvFragment, ServerSend, ServerSendFragment };
+        public static IEnumerable<string> CoreAddress = new List<string>() { ClientAddr, ServerAddr };
+        public static IEnumerable<string> CoreWire = new List<string>() { WireSend, WireRecv };
+        public static IEnumerable<string> CoreLocal = new List<string>() { LocalComponent };
+
+        public static IEnumerable<string> CoreAnnotations = CoreClient.Concat(CoreServer).Concat(CoreAddress).Concat(CoreWire).Concat(CoreLocal);
+
+        public static Dictionary<string, string> CoreAnnotationNames = new Dictionary<string, string>() 
+        {
+            { "ClientSend", "Client Send" },
+            { "ClientSendFragment", "Client Send Fragment" },
+            { "ClientRecv", "Client Receive" },
+            { "ClientRecvFragment", "Client Receive Fragment" },
+            { "ServerSend", "Server Send" },
+            { "ServerSendFragment", "Server Send Fragment" },
+            { "ServerRecv", "Server Receive" },
+            { "ServerRecvFragment", "Server Receive Fragment" },
+            { "ClientAddr", "Client Address" },
+            { "ServerAddr", "Server Address" },
+            { "WireSend", "Wire Send" },
+            { "WireRecv", "Wire Receive" },
+            { "LocalComponent", "Local Component" }
+        };
     }
 }

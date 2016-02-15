@@ -6,6 +6,9 @@ using System.Web;
 using System.Web.Mvc;
 using Zipkin.Core;
 using Zipkin.Core.Json;
+using Zipkin.UI.Web.ViewModels;
+
+using WebUtil = Zipkin.UI.Web.Helpers.Util;
 
 namespace Zipkin.UI.Web.Controllers
 {
@@ -47,7 +50,7 @@ namespace Zipkin.UI.Web.Controllers
             }
             if (spans.Count != 0 && traces.Count != 0)
             {
-                ViewBag.Spans = spans.Select(s => new Dictionary<string, string> { { "name", s}, { "selected", s == spanName ? "selected" : string.Empty} });
+                ViewBag.Spans = spans.Select(s => new Dictionary<string, string> { { "name", s }, { "selected", s == spanName ? "selected" : string.Empty } }).ToList();
                 ViewBag.queryResults = TraceSummaryToMustache(serviceName, traces);
             }
             return View();
@@ -61,7 +64,7 @@ namespace Zipkin.UI.Web.Controllers
                 var duration = t.Duration / 1000;
                 var groupedSpanTimestamps = t.SpanTimestamps.GroupBy(s => s.Name);
                 var serviceDurations = groupedSpanTimestamps.Select(g =>
-                    new MustacheServiceDuration() { name = g.Key, count = g.Count(), max = g.Max(st => st.Duration / 1000) });
+                    new MustacheServiceDuration() { name = g.Key, count = g.Count(), max = g.Max(st => st.Duration / 1000) }).ToList();
 
                 long? serviceTime = null;
                 if (!string.IsNullOrEmpty(serviceName))
@@ -78,7 +81,7 @@ namespace Zipkin.UI.Web.Controllers
                     startTs = Util.FromUnixTimeSeconds(t.Timestamp / 1000).ToString(),
                     timestamp = t.Timestamp,
                     duration = duration,
-                    durationStr = TimeSpan.FromMilliseconds(duration).ToString(),
+                    durationStr = WebUtil.FormatDurtion(duration),
                     servicePercentage = serviceTime.HasValue ? (int)(100 * (float)serviceTime.Value / (float)t.Duration) : 0,
                     spanCount = t.SpanTimestamps.Count(),
                     serviceDurations = serviceDurations,
@@ -117,26 +120,6 @@ namespace Zipkin.UI.Web.Controllers
                 var endTs = current.Max(s => s.EndTs);
                 return TotalServiceTime(next, acc + (endTs - ts.Timestamp));
             }
-        }
-
-        public class MustacheServiceDuration
-        {
-            public string name { get; set; }
-            public int count { get; set; }
-            public long max { get; set; }
-        }
-
-        public class MustacheTraceSummary
-        {
-            public string traceId { get; set; }
-            public string startTs { get; set; }
-            public long timestamp { get; set; }
-            public long duration { get; set; }
-            public string durationStr { get; set; }
-            public int servicePercentage { get; set; }
-            public int spanCount { get; set; }
-            public IEnumerable<MustacheServiceDuration> serviceDurations { get; set; }
-            public int width { get; set; }
         }
     }
 }
