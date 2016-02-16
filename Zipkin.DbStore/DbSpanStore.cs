@@ -118,7 +118,7 @@ namespace Zipkin.DbStore
                 }
                 if (traceIds.Count() != 0)
                 {
-                    spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds", new { traceIds = traceIds })
+                    spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds order by start_ts", new { traceIds = traceIds })
                         .Select(s =>
                         {
                             return new Span(

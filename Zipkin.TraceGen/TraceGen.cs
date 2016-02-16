@@ -164,7 +164,7 @@ namespace Zipkin.TraceGen
 
             svrAnnos.Add(new Annotation(Util.ToUnixTimMicroseconds(curTime), Constants.ServerSend, endpoint));
             var timestamp = svrAnnos[0].timestamp;
-            var duration = svrAnnos[1].timestamp - svrAnnos[0].timestamp;
+            var duration = svrAnnos[svrAnnos.Count - 1].timestamp - svrAnnos[0].timestamp;
             trace.AddSpan(spanName, spanId, parentSpanId, timestamp, duration, svrAnnos, svrBinAnnos);
             return curTime;
         }

@@ -23,51 +23,49 @@ namespace Zipkin.Core
             return new ReadOnlyCollection<T>(result).ToList();
         }
 
-        protected static readonly DateTime unixTPStart =
-            TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
-
+        protected static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        
         public static long CurrentTimeSeconds()
         {
-            return ToUnixTimeSeconds(DateTime.UtcNow);
+            return ToUnixTimeSeconds(DateTime.Now);
         }
 
         public static long CurrentTimeMilliSeconds()
         {
-            var toNow = DateTime.UtcNow - unixTPStart;
-            return (long)Math.Round(toNow.TotalMilliseconds);
+            return ToUnixTimeMilliseconds(DateTime.Now);
         }
 
         public static long ToUnixTimeSeconds(DateTime dt)
         {
-            TimeSpan toNow = dt.Subtract(unixTPStart);
-            return (long)Math.Round(toNow.TotalSeconds);
+            TimeSpan timespan = TimeZoneInfo.ConvertTimeToUtc(dt).Subtract(UnixEpoch);
+            return timespan.Ticks / 10000000;
         }
 
         public static long ToUnixTimeMilliseconds(DateTime dt)
         {
-            TimeSpan toNow = dt.Subtract(unixTPStart);
-            return (long)Math.Round(toNow.TotalMilliseconds);
+            TimeSpan timespan = TimeZoneInfo.ConvertTimeToUtc(dt).Subtract(UnixEpoch);
+            return timespan.Ticks / 10000;
         }
 
         public static long ToUnixTimMicroseconds(DateTime dt)
         {
-            TimeSpan toNow = dt.Subtract(unixTPStart);
-            return toNow.Ticks / 10;
+            TimeSpan timespan = TimeZoneInfo.ConvertTimeToUtc(dt).Subtract(UnixEpoch);
+            return timespan.Ticks / 10;
         }
 
         public static DateTime FromUnixTimeSeconds(long seconds)
         {
-            return unixTPStart.AddSeconds(seconds);
+            return UnixEpoch.AddSeconds(seconds).ToLocalTime();
         }
 
         public static DateTime FromUnixTimeMilliseconds(long mills)
         {
-            return unixTPStart.AddMilliseconds(mills);
+            return UnixEpoch.AddMilliseconds(mills).ToLocalTime();
         }
 
-        public static DateTime FromUnixTimeMicros(long micros)
+        public static DateTime FromUnixTimeMicroseconds(long micros)
         {
-            return unixTPStart.AddTicks(micros * 10);
+            return UnixEpoch.AddTicks(micros * 10).ToLocalTime();
         }
 
 

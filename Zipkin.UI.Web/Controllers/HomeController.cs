@@ -81,8 +81,9 @@ namespace Zipkin.UI.Web.Controllers
                     startTs = Util.FromUnixTimeMilliseconds(t.Timestamp / 1000).ToString(),
                     timestamp = t.Timestamp,
                     duration = duration,
-                    durationStr = WebUtil.FormatDurtion(duration),
+                    durationStr = WebUtil.FormatDurtion(t.Duration),
                     servicePercentage = serviceTime.HasValue ? (int)(100 * (float)serviceTime.Value / (float)t.Duration) : 0,
+                    //spanCount = groupedSpanTimestamps.Aggregate(0, (acc, sts) => acc + sts.Count()),
                     spanCount = t.SpanTimestamps.Count(),
                     serviceDurations = serviceDurations,
                     width = (int)(100 * (float)duration / (float)maxDuration)
