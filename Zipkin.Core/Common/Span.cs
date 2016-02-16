@@ -15,11 +15,11 @@ namespace Zipkin.Core
         public long? parentId { get; set; }
         public long? timestamp { get; set; }
         public long? duration { get; set; }
-        public IList<Annotation> annotations { get; set; }
-        public IList<BinaryAnnotation> binaryAnnotations { get; set; }
+        public List<Annotation> annotations { get; set; }
+        public List<BinaryAnnotation> binaryAnnotations { get; set; }
         public bool? debug { get; set; }
 
-        public List<Annotation> clientSideAnnotations 
+        public IEnumerable<Annotation> clientSideAnnotations 
         { 
             get 
             {
@@ -27,7 +27,7 @@ namespace Zipkin.Core
             }
         }
 
-        public List<Annotation> serverSideAnnotations
+        public IEnumerable<Annotation> serverSideAnnotations
         {
             get
             {
@@ -101,8 +101,8 @@ namespace Zipkin.Core
             this.parentId = parentId;
             this.timestamp = timestamp;
             this.duration = duration;
-            this.annotations = Util.SortedList(annotations ?? Enumerable.Empty<Annotation>().ToList());
-            this.binaryAnnotations = new ReadOnlyCollection<BinaryAnnotation>(binaryAnnotations ?? Enumerable.Empty<BinaryAnnotation>().ToList());
+            this.annotations = annotations == null ? new List<Annotation>() : Util.SortedList(annotations);
+            this.binaryAnnotations = binaryAnnotations == null ? new List<BinaryAnnotation>() : new ReadOnlyCollection<BinaryAnnotation>(binaryAnnotations).ToList();
             this.debug = debug;
         }
 

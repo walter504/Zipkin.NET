@@ -1,4 +1,8 @@
-﻿<div id='trace-controls' class='row well well-sm'>
+﻿@{
+    ViewBag.Title = "Traces";
+}
+
+<div id='trace-controls' class='row well well-sm'>
     <ul class='nav nav-pills'>
         <li class=''><a href='#'><strong>Duration:</strong> <span class='badge'>@ViewBag.duration</span></a></li>
         <li class=''><a href='#'><strong>Services:</strong> <span class='badge'>@ViewBag.services</span></a></li>
@@ -85,9 +89,9 @@
             {
                 <div class='binary-annotation'
                      data-keys='key,value,type'
-                     data-key='@banno["key"]'
-                     data-value='@banno["value"]'
-                     data-type='@banno["annotationType"]'></div>
+                     data-key='@banno.key'
+                     data-value='@banno.value'
+                     data-type='@banno.annotationType'></div>
             }
         </div>
     }
@@ -199,9 +203,9 @@
             {
                 <div class='binary-annotation'
                      data-keys='key,value,type'
-                     data-key='@banno["key"]'
-                     data-value='@banno["value"]'
-                     data-type='@banno["annotationType"]'></div>
+                     data-key='@banno.key'
+                     data-value='@banno.value'
+                     data-type='@banno.annotationType'></div>
             }
         </div>
     }

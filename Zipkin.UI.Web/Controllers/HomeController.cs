@@ -78,7 +78,7 @@ namespace Zipkin.UI.Web.Controllers
                 return new MustacheTraceSummary()
                 {
                     traceId = t.TraceId,
-                    startTs = Util.FromUnixTimeSeconds(t.Timestamp / 1000).ToString(),
+                    startTs = Util.FromUnixTimeMilliseconds(t.Timestamp / 1000).ToString(),
                     timestamp = t.Timestamp,
                     duration = duration,
                     durationStr = WebUtil.FormatDurtion(duration),

@@ -88,8 +88,8 @@ namespace Zipkin.DbStore
                             annotationEntity.endpoint_ipv4 = annotation.endpoint.ipv4;
                             annotationEntity.endpoint_port = annotation.endpoint.port;
                         }
-                        conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
-                            values(@trace_id,@span_id,@a_key,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annotationEntity, transaction);
+                        conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
+                            values(@trace_id,@span_id,@a_key,@a_value,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annotationEntity, transaction);
                     }
                 }
                 transaction.Commit();
@@ -108,30 +108,33 @@ namespace Zipkin.DbStore
 
         private IEnumerable<IEnumerable<Span>> GetTraces(QueryRequest request, IEnumerable<long> traceIds)
         {
-            IDictionary<long, IEnumerable<Span>> spansWithoutAnnotations;
-            IDictionary<KeyValuePair<long, long>, IEnumerable<zipkin_annotations>> dbAnnotations;
+            var spansWithoutAnnotations = new Dictionary<long, List<Span>>();
+            var dbAnnotations = new Dictionary<KeyValuePair<long, long>, List<zipkin_annotations>>();
             using (IDbConnection conn = OpenConnection())
             {
                 if (request != null)
                 {
                     traceIds = conn.Query<long>(GetTraceIdQuery(request));
                 }
-                spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds", new { traceIds = traceIds })
-                    .Select(s =>
-                    {
-                        return new Span(
-                            s.trace_id,
-                            s.name,
-                            s.id,
-                            s.parent_id,
-                            s.start_ts,
-                            s.duration,
-                            debug: s.debug
-                        );
-                    }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.AsEnumerable());
+                if (traceIds.Count() != 0)
+                {
+                    spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds", new { traceIds = traceIds })
+                        .Select(s =>
+                        {
+                            return new Span(
+                                s.trace_id,
+                                s.name,
+                                s.id,
+                                s.parent_id,
+                                s.start_ts,
+                                s.duration,
+                                debug: s.debug
+                            );
+                        }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.ToList());
 
-                dbAnnotations = conn.Query<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceIds order by a_timestamp, a_key", new { traceIds = traceIds })
-                    .GroupBy(a => new KeyValuePair<long, long>(a.trace_id, a.span_id)).ToDictionary(g => g.Key, g => g.AsEnumerable());
+                    dbAnnotations = conn.Query<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceIds order by a_timestamp, a_key", new { traceIds = traceIds })
+                        .GroupBy(a => new KeyValuePair<long, long>(a.trace_id, a.span_id)).ToDictionary(g => g.Key, g => g.ToList());
+                }
             }
 
             List<List<Span>> result = new List<List<Span>>();

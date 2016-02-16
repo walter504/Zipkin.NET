@@ -14,17 +14,17 @@ namespace Zipkin.Core
             return a == b || (a != null && a.Equals(b));
         }
 
-        public static IList<T> SortedList<T>(IList<T> input) where T : IComparable<T>
+        public static List<T> SortedList<T>(IList<T> input) where T : IComparable<T>
         {
-            if (input == null || 0 == input.Count) return new Collection<T>();
-            if (input.Count == 1) return new ReadOnlyCollection<T>(input);
+            if (input == null || 0 == input.Count) return new List<T>();
+            if (input.Count == 1) return new ReadOnlyCollection<T>(input).ToList();
             List<T> result = input.ToList();
             result.Sort();
-            return new ReadOnlyCollection<T>(result);
+            return new ReadOnlyCollection<T>(result).ToList();
         }
 
         protected static readonly DateTime unixTPStart =
-            TimeZone.CurrentTimeZone.ToUniversalTime(new DateTime(1970, 1, 1));
+            TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
 
         public static long CurrentTimeSeconds()
         {
@@ -39,14 +39,20 @@ namespace Zipkin.Core
 
         public static long ToUnixTimeSeconds(DateTime dt)
         {
-            TimeSpan toNow = dt.ToUniversalTime().Subtract(unixTPStart);
+            TimeSpan toNow = dt.Subtract(unixTPStart);
             return (long)Math.Round(toNow.TotalSeconds);
         }
 
         public static long ToUnixTimeMilliseconds(DateTime dt)
         {
-            TimeSpan toNow = dt.ToUniversalTime().Subtract(unixTPStart);
+            TimeSpan toNow = dt.Subtract(unixTPStart);
             return (long)Math.Round(toNow.TotalMilliseconds);
+        }
+
+        public static long ToUnixTimMicroseconds(DateTime dt)
+        {
+            TimeSpan toNow = dt.Subtract(unixTPStart);
+            return toNow.Ticks / 10;
         }
 
         public static DateTime FromUnixTimeSeconds(long seconds)
@@ -54,9 +60,14 @@ namespace Zipkin.Core
             return unixTPStart.AddSeconds(seconds);
         }
 
-        public static DateTime FromUnixTimeMilliseconds(long seconds)
+        public static DateTime FromUnixTimeMilliseconds(long mills)
         {
-            return unixTPStart.AddMilliseconds(seconds);
+            return unixTPStart.AddMilliseconds(mills);
+        }
+
+        public static DateTime FromUnixTimeMicros(long micros)
+        {
+            return unixTPStart.AddTicks(micros * 10);
         }
 
 
