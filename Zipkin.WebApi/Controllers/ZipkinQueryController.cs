@@ -10,15 +10,15 @@ using Zipkin.Core.Json;
 namespace Zipkin.WebApi.Controllers
 {
     [RoutePrefix("api/v1")]
-    public class TraceController : ApiController
+    public class ZipkinQueryController : ApiController
     {
         const int defaultLookback = 3600 * 24 * 7 * 1000; // 7 days in millis
         const int defaultLimit = 10;
 
         private readonly ISpanStore spanStore;
-        private readonly SpanWriter spanWriter;
+        private readonly ZipkinSpanWriter spanWriter;
 
-        public TraceController(ISpanStore spanStore, SpanWriter spanWriter)
+        public ZipkinQueryController(ISpanStore spanStore, ZipkinSpanWriter spanWriter)
         {
             this.spanStore = spanStore;
             this.spanWriter = spanWriter;
@@ -131,6 +131,5 @@ namespace Zipkin.WebApi.Controllers
             }
             return Ok(traces.First().Select(s => new JsonSpan(s)));
         }
-        
     }
 }

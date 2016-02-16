@@ -43,7 +43,7 @@ namespace Zipkin.TraceGen
 
         public List<Span> Apply()
         {
-             
+            return new List<Span>();
         }
 
         protected static long GetRandLong()

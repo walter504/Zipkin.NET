@@ -6,11 +6,11 @@ using Zipkin.Core;
 
 namespace Zipkin.WebApi
 {
-    public class SpanWriter
+    public class ZipkinSpanWriter
     {
         public Sampler sampler { get; set; }
 
-        public SpanWriter(Sampler sampler)
+        public ZipkinSpanWriter(Sampler sampler)
         {
             this.sampler = sampler;
         }
