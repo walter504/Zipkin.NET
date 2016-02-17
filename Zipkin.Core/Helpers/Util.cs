@@ -30,7 +30,7 @@ namespace Zipkin.Core
             return ToUnixTimeSeconds(DateTime.Now);
         }
 
-        public static long CurrentTimeMilliSeconds()
+        public static long CurrentTimeMilliseconds()
         {
             return ToUnixTimeMilliseconds(DateTime.Now);
         }

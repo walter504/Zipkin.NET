@@ -24,7 +24,7 @@ namespace Zipkin.UI.Web.Controllers
             int? minDuration = null)
         {
             ViewBag.serviceName = serviceName;
-            ViewBag.endTs = (endTs ?? Util.CurrentTimeMilliSeconds()).ToString();
+            ViewBag.endTs = (endTs ?? Util.CurrentTimeMilliseconds()).ToString();
             ViewBag.annotationQuery = annotationQuery ?? string.Empty;
             ViewBag.limit = (limit ?? 10).ToString();
             ViewBag.minDuration = minDuration.HasValue ? minDuration.Value.ToString() : string.Empty;

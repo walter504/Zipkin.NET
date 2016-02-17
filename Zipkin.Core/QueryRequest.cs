@@ -68,8 +68,8 @@ namespace Zipkin.Core
         {
             Ensure.ArgumentAssert(serviceName != null && !string.IsNullOrEmpty(serviceName), "serviceName was empty");
             Ensure.ArgumentAssert(spanName == null || !string.IsNullOrEmpty(spanName), "spanName was empty");
-            Ensure.ArgumentAssert(endTs > 0, "endTs should be positive, in epoch microseconds: was %d", endTs);
-            Ensure.ArgumentAssert(limit > 0, "limit should be positive: was %d", limit);
+            Ensure.ArgumentAssert(endTs > 0, "endTs should be positive, in epoch milliseconds: was {0}", endTs);
+            Ensure.ArgumentAssert(limit > 0, "limit should be positive: was {0}", limit);
             this.serviceName = serviceName.ToLower();
             this.spanName = spanName != null ? spanName.ToLower() : null;
             this.annotations = annotations;
@@ -85,7 +85,7 @@ namespace Zipkin.Core
             }
             this.minDuration = minDuration;
             this.maxDuration = maxDuration;
-            this.endTs = endTs ?? Util.CurrentTimeMilliSeconds();
+            this.endTs = endTs ?? Util.CurrentTimeMilliseconds();
             this.lookback = Math.Min(lookback ?? this.endTs, this.endTs);
             this.limit = limit ?? 10;
         }

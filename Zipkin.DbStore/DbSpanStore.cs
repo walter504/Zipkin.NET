@@ -37,7 +37,7 @@ namespace Zipkin.DbStore
                     if (!binaryAnnotationTimestamp.HasValue)
                     {
                         // fallback if we have no timestamp, yet
-                        binaryAnnotationTimestamp = Util.CurrentTimeMilliSeconds() * 1000;
+                        binaryAnnotationTimestamp = Util.CurrentTimeMilliseconds() * 1000;
                     }
                     var spanEntity = new zipkin_spans()
                     {
@@ -181,7 +181,7 @@ namespace Zipkin.DbStore
         private string GetTraceIdQuery(QueryRequest request)
         {
             long endTs = (request.endTs > 0 && request.endTs != long.MaxValue)
-                ? request.endTs * 1000 : Util.CurrentTimeMilliSeconds() * 1000;
+                ? request.endTs * 1000 : Util.CurrentTimeMilliseconds() * 1000;
 
             var query = new StringBuilder();
             query.Append(@"select distinct s.trace_id from zipkin_spans as s
