@@ -65,12 +65,12 @@ namespace Zipkin.Core
             result.Add(span);
             if (children != null)
             {
-                foreach (var child in children)
+                foreach (var child in children.OrderBy(c => c.span).ToList())
                 {
                     result.AddRange(child.ToSpans());
                 }
             }
-            return Util.SortedList(result);
+            return result;
         }
 
         public Dictionary<long, int> Depths(int startDepth)

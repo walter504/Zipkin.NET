@@ -87,7 +87,7 @@ namespace Zipkin.UI.Web.Controllers
                         {"width", width < 0.1 ? 0.1 : width},
                         {"depth", (depth + 1) * 5},
                         {"depthClass", (depth - 1) % 6},
-                        {"children", Util.LongToHex(span.id)},
+                        {"children", string.Join(",", trace.Where(s => s.parentId == span.id).Select(s => Util.LongToHex(s.id)).ToArray())},
                         {"annotations",  span.annotations.Select(a => new Dictionary<string, object>() 
                             {
                                 {"isCore", Constants.CoreAnnotations.Contains(a.value)},
