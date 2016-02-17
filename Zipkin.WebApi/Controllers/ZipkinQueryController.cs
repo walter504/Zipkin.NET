@@ -100,11 +100,14 @@ namespace Zipkin.WebApi.Controllers
                     else
                     {
                         string[] keyValue = ann.Split(new char[] { '=' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (keyValue.Length < 2)
+                        if (keyValue.Length <= 1)
                         {
                             annotations.Add(ann);
                         }
-                        binaryAnnotations.Add(keyValue[0], keyValue[1]);
+                        else
+                        {
+                            binaryAnnotations.Add(keyValue[0], keyValue[1]);
+                        }
                     }
                 }
             }

@@ -222,6 +222,10 @@ namespace Zipkin.DbStore
                 query.Append(" and s.duration < ");
                 query.Append(request.maxDuration);
             }
+            foreach (var kvp in request.binaryAnnotations)
+            {
+                query.AppendFormat(" and {0}.a_value = '{1}'", keyToTables[kvp.Key], kvp.Value);
+            }
             query.Append(" order by s.start_ts desc limit ");
             query.Append(request.limit);
             return query.ToString();
@@ -232,7 +236,7 @@ namespace Zipkin.DbStore
             return string.Format(@" join zipkin_annotations as {0}
                 on s.trace_id = {0}.trace_id
                     and s.id = {0}.span_id
-                    and {0}.a_type = " + (int)AnnotationType.STRING
+                    and {0}.a_type = " + type
                 + " and {0}.a_key = '" + key + "'", joinTable);
         }
 
