@@ -19,7 +19,10 @@ namespace Zipkin.TraceGen
         private static string queryDest = "http://localhost:9411";
         private static bool generateOnly = false;
 
-        private static WebClient queryClient = new WebClient() { BaseAddress = queryDest };
+        private static WebClient queryClient = new WebClient()
+        {
+            BaseAddress = queryDest 
+        };
 
         static void Main(string[] args)
         {
@@ -44,6 +47,7 @@ namespace Zipkin.TraceGen
         {
             var jsonSpans = new List<JsonSpan>() { new JsonSpan(span) };
             var data = JsonConvert.SerializeObject(jsonSpans);
+            queryClient.Encoding = System.Text.Encoding.UTF8;
             queryClient.Headers.Add("Content-Type", "application/json");
             queryClient.UploadString("/api/v1/spans", "POST", data);
         }
