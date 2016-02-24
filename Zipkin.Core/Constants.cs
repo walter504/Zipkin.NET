@@ -169,5 +169,8 @@ namespace Zipkin.Core
             { "WireRecv", "Wire Receive" },
             { "LocalComponent", "Local Component" }
         };
+
+        /* 127.0.0.1 */
+        public  static int LocalhostLoopBackIP = (127 << 24) | 1;
     }
 }

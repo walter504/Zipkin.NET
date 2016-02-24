@@ -59,7 +59,7 @@ namespace Zipkin.Core
             return rootNode;
         }
 
-        public IEnumerable<Span> ToSpans()
+        public List<Span> ToSpans()
         {
             var result = new List<Span>();
             result.Add(span);
