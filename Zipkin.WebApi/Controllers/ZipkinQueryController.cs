@@ -124,10 +124,10 @@ namespace Zipkin.WebApi.Controllers
             return Ok(spanStore.GetTraces(request).Select(t => t.Select(s => new JsonSpan(s))));
         }
 
-        [Route("trace/{traceId}")]
-        public IHttpActionResult GetTrace(long traceId)
+        [Route("trace/{id}")]
+        public IHttpActionResult GetTrace(long id)
         {
-            var traces = spanStore.GetTracesByIds(new long[]{traceId});
+            var traces = spanStore.GetTracesByIds(new long[] { id });
             if (traces.Count() == 0)
             {
                 return NotFound();
