@@ -7,7 +7,6 @@ using System.Web.Mvc;
 using Zipkin.Core;
 using Zipkin.Core.Json;
 using Zipkin.UI.Web.ViewModels;
-
 using WebUtil = Zipkin.UI.Web.Helpers.Util;
 
 namespace Zipkin.UI.Web.Controllers
@@ -35,7 +34,7 @@ namespace Zipkin.UI.Web.Controllers
             var traces = new List<TraceSummary>();
             if (!string.IsNullOrEmpty(serviceName))
             {
-                var client = new RestClient("http://localhost:9411");
+                var client = new RestClient(Zipkin.UI.Web.Helpers.WebAppSettings.QueryHost);
                 spans = client.Execute<List<string>>(new RestRequest(string.Format("/api/v1/spans?serviceName={0}", serviceName))).Data;
 
                 var tracesReq = new RestRequest("/api/v1/traces");

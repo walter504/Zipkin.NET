@@ -8,7 +8,6 @@ using Tracing.Core;
 using Zipkin.Core;
 using Zipkin.Core.Json;
 using Zipkin.UI.Web.ViewModels;
-
 using WebUtil = Zipkin.UI.Web.Helpers.Util;
 
 namespace Zipkin.UI.Web.Controllers
@@ -19,7 +18,7 @@ namespace Zipkin.UI.Web.Controllers
         public ActionResult Index(string id)
         {
             var traceId = Util.HexToLong(id);
-            var client = new RestClient("http://localhost:9411");
+            var client = new RestClient(Zipkin.UI.Web.Helpers.WebAppSettings.QueryHost);
             var trace = client.Execute<List<JsonSpan>>(new RestRequest(string.Format("/api/v1/trace/{0}", traceId))).Data
                 .Select(js => js.Invert()).ToList();
             if (trace.Count() == 0)

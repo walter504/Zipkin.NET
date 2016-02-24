@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Zipkin.UI.Web.Helpers;
 
 namespace Zipkin.UI.Web.Controllers
 {
@@ -18,7 +19,7 @@ namespace Zipkin.UI.Web.Controllers
         public ContentResult Route()
         {
             var baseUri = Request.Url.AbsolutePath;
-            var client = new RestClient("http://localhost:9411");
+            var client = new RestClient(WebAppSettings.QueryHost);
             var request = new RestRequest(baseUri);
             foreach (var key in Request.QueryString.AllKeys)
             {

@@ -202,8 +202,9 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\Util.cs" />
+    <Compile Include="Helpers\WebAppSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TraceSummary.cs" />
+    <Compile Include="Models\TraceSummary.cs" />
     <Compile Include="ViewModels\MustacheServiceDuration.cs" />
     <Compile Include="ViewModels\MustacheTraceSummary.cs" />
   </ItemGroup>
@@ -213,9 +214,7 @@
       <Name>Zipkin.Core</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Views\ZipkinQuery\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
