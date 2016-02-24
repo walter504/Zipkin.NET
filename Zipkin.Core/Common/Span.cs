@@ -155,9 +155,7 @@ namespace Zipkin.Core
         public int CompareTo(Span that)
         {
             if (this == that) return 0;
-            int byTimestamp =
-                (this.timestamp.HasValue ? this.timestamp.Value : long.MinValue)
-                .CompareTo(that.timestamp.HasValue ? that.timestamp : long.MinValue);
+            int byTimestamp = (this.timestamp ?? long.MinValue).CompareTo(that.timestamp ?? long.MinValue);
             if (byTimestamp != 0) return byTimestamp;
             return this.name.CompareTo(that.name);
         }
