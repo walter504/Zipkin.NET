@@ -27,71 +27,77 @@ namespace Zipkin.DbStore
 
         public void Accept(IEnumerable<Span> spans)
         {
+            var spanEntities = new List<zipkin_spans>();
+            var annoEntities = new List<zipkin_annotations>();
+            foreach (var span in spans)
+            {
+                ApplyTimestampAndDuration.Apply(span);
+                long? binaryAnnotationTimestamp = span.timestamp;
+                if (!binaryAnnotationTimestamp.HasValue)
+                {
+                    // fallback if we have no timestamp, yet
+                    binaryAnnotationTimestamp = Util.CurrentTimeMilliseconds() * 1000;
+                }
+
+                spanEntities.Add(new zipkin_spans()
+                {
+                    trace_id = span.traceId,
+                    id = span.id,
+                    name = span.name,
+                    parent_id = span.parentId,
+                    debug = span.debug,
+                    start_ts = span.timestamp,
+                    duration = span.duration
+                });
+
+                annoEntities.AddRange(span.annotations.Select(a =>
+                {
+                    var entity = new zipkin_annotations()
+                    {
+                        trace_id = span.traceId,
+                        span_id = span.id,
+                        a_key = a.value,
+                        a_type = -1,
+                        a_timestamp = a.timestamp
+                    };
+                    if (a.endpoint != null)
+                    {
+                        entity.endpoint_service_name = a.endpoint.serviceName;
+                        entity.endpoint_ipv4 = a.endpoint.ipv4;
+                        entity.endpoint_port = a.endpoint.port;
+                    }
+                    return entity;
+                }).ToList());
+
+                annoEntities.AddRange(span.binaryAnnotations.Select(a =>
+                {
+                    var entity = new zipkin_annotations()
+                    {
+                        trace_id = span.traceId,
+                        span_id = span.id,
+                        a_key = a.key,
+                        a_value = a.value,
+                        a_type = (int)a.type,
+                        a_timestamp = binaryAnnotationTimestamp
+                    };
+                    if (a.endpoint != null)
+                    {
+                        entity.endpoint_service_name = a.endpoint.serviceName;
+                        entity.endpoint_ipv4 = a.endpoint.ipv4;
+                        entity.endpoint_port = a.endpoint.port;
+                    }
+                    return entity;
+                }).ToList());
+            }
             using (IDbConnection conn = OpenConnection())
             using (IDbTransaction transaction = conn.BeginTransaction())
             {
-                foreach (var span in spans)
-                {
-                    ApplyTimestampAndDuration.Apply(span);
-                    long? binaryAnnotationTimestamp = span.timestamp;
-                    if (!binaryAnnotationTimestamp.HasValue)
-                    {
-                        // fallback if we have no timestamp, yet
-                        binaryAnnotationTimestamp = Util.CurrentTimeMilliseconds() * 1000;
-                    }
-                    var spanEntity = new zipkin_spans()
-                    {
-                        trace_id = span.traceId,
-                        id = span.id,
-                        name = span.name,
-                        parent_id = span.parentId,
-                        debug = span.debug,
-                        start_ts = span.timestamp,
-                        duration = span.duration
-                    };
-                    conn.Execute(@"replace into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
-                        values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)", spanEntity, transaction);
+                conn.Execute(@"replace into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
+                    values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)", spanEntities, transaction);
 
-                    foreach (var annotation in span.annotations)
-                    {
-                        var annotationEntity = new zipkin_annotations()
-                        {
-                            trace_id = span.traceId,
-                            span_id = span.id,
-                            a_key = annotation.value,
-                            a_type = -1,
-                            a_timestamp = annotation.timestamp
-                        };
-                        if (annotation.endpoint != null)
-                        {
-                            annotationEntity.endpoint_service_name = annotation.endpoint.serviceName;
-                            annotationEntity.endpoint_ipv4 = annotation.endpoint.ipv4;
-                            annotationEntity.endpoint_port = annotation.endpoint.port;
-                        }
-                        conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
-                            values(@trace_id,@span_id,@a_key,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annotationEntity, transaction);
-                    }
-                    foreach (var annotation in span.binaryAnnotations)
-                    {
-                        var annotationEntity = new zipkin_annotations()
-                        {
-                            trace_id = span.traceId,
-                            span_id = span.id,
-                            a_key = annotation.key,
-                            a_value = annotation.value,
-                            a_type = (int)annotation.type,
-                            a_timestamp = binaryAnnotationTimestamp
-                        };
-                        if (annotation.endpoint != null)
-                        {
-                            annotationEntity.endpoint_service_name = annotation.endpoint.serviceName;
-                            annotationEntity.endpoint_ipv4 = annotation.endpoint.ipv4;
-                            annotationEntity.endpoint_port = annotation.endpoint.port;
-                        }
-                        conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
-                            values(@trace_id,@span_id,@a_key,@a_value,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annotationEntity, transaction);
-                    }
-                }
+                conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
+                    values(@trace_id,@span_id,@a_key,@a_value,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annoEntities, transaction);
+
                 transaction.Commit();
             }
         }
