@@ -92,10 +92,11 @@ namespace Zipkin.DbStore
             using (IDbConnection conn = OpenConnection())
             using (IDbTransaction transaction = conn.BeginTransaction())
             {
-                conn.Execute(@"replace into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
-                    values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)", spanEntities, transaction);
+                conn.Execute(@"insert into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
+                    values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)
+                    on duplicate key update name=@name, start_ts=@start_ts, duration=@duration", spanEntities, transaction);
 
-                conn.Execute(@"replace into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
+                conn.Execute(@"insert ignore into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
                     values(@trace_id,@span_id,@a_key,@a_value,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", annoEntities, transaction);
 
                 transaction.Commit();
