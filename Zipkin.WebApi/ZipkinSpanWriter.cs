@@ -17,7 +17,7 @@ namespace Zipkin.WebApi
 
         public void Write(ISpanStore spanStore, IEnumerable<Span> spans)
         {
-            var sampledSpans = spans.Where(s => (s.debug.HasValue && s.debug.Value) || sampler.IsSampled(s.id)).ToList();
+            var sampledSpans = spans.Where(s => (s.debug.HasValue && s.debug.Value) || sampler.IsSampled(s.traceId)).ToList();
             spanStore.Accept(sampledSpans);
         }
     }

@@ -13,8 +13,8 @@ namespace Zipkin.Core
 
         public static Sampler Create(float rate)
         {
-            if (rate == 0.0) return NEVER_SAMPLE;
-            if (rate == 1.0) return ALWAYS_SAMPLE;
+            if (rate == 0.0F) return NEVER_SAMPLE;
+            if (rate == 1.0F) return ALWAYS_SAMPLE;
             return new ProbabilisticSampler(rate);
         }
         static readonly NeverSampler NEVER_SAMPLE = new NeverSampler();
@@ -59,10 +59,6 @@ namespace Zipkin.Core
         /** {@link #isSampled(long)} returns true when abs(traceId) < boundary */
         private readonly long boundary;
 
-        public ProbabilisticSampler() 
-            : this(0.99F)
-        {
-        }
         public ProbabilisticSampler(float rate)
         {
             Ensure.ArgumentAssert(rate > 0 && rate < 1, "rate should be between 0 and 1: was %s", rate);

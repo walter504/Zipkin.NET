@@ -43,9 +43,7 @@ namespace Zipkin.WebApi
         private static void Register(ContainerBuilder builder)
         {
             //log4net.Config.XmlConfigurator.Configure();
-            //var logger = log4net.LogManager.GetLogger("LogHelper");
-            //builder.Register(c => logger).As<ILog>().SingleInstance();
-            builder.RegisterType<ProbabilisticSampler>().As<Sampler>();
+            builder.Register(c => Sampler.Create(1.0F)).As<Sampler>().SingleInstance();
             builder.RegisterType<ZipkinSpanWriter>();
             builder.RegisterType<DbSpanStore>().As<ISpanStore>();
         }
