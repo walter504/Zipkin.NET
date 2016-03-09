@@ -29,7 +29,7 @@ namespace Zipkin.Core
             var idToNode = new Dictionary<long, SpanNode>();
             foreach (var s in spans)
             {
-                if (s.parentId.HasValue)
+                if (s.parentId.HasValue && s != span)
                 {
                     idToNode.Add(s.id, new SpanNode(s));
                 }
