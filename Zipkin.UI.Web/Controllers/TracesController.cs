@@ -19,13 +19,13 @@ namespace Zipkin.UI.Web.Controllers
         {
             var traceId = Util.HexToLong(id);
             var client = new RestClient(Zipkin.UI.Web.Helpers.WebAppSettings.QueryHost);
-            var trace = client.Execute<List<JsonSpan>>(new RestRequest(string.Format("/api/v1/trace/{0}", traceId))).Data
-                .Select(js => js.Invert()).ToList();
-            if (trace.Count() == 0)
+            var response = client.Execute<List<JsonSpan>>(new RestRequest(string.Format("/api/v1/trace/{0}", traceId)));
+            if (response.StatusCode != System.Net.HttpStatusCode.OK || response.Data ==null || response.Data.Count == 0)
             {
                 return HttpNotFound();
             }
 
+            var trace = response.Data.Select(js => js.Invert()).ToList();
             var traceTimestamp = trace.First().timestamp ?? 0L;
             var traceDuration = Trace.Duration(trace) ?? 0L;
             var spanDepths = TraceSummary.ToSpanDepths(trace);
