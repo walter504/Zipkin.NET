@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.Core", "Zipkin.Core\Zipkin.Core.csproj", "{695DD045-6870-4575-94BB-93F6ED9D6342}"
 EndProject
@@ -21,6 +21,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.UI.Web", "Zipkin.UI.Web\Zipkin.UI.Web.csproj", "{CC85452C-9EFB-488F-AD46-45F0CC2EC17E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.TraceGen", "Zipkin.TraceGen\Zipkin.TraceGen.csproj", "{31C775B2-BF2F-491C-B79A-E1F0C242EA9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.Sampler", "Zipkin.Sampler\Zipkin.Sampler.csproj", "{722662CC-8CF7-4E97-BED4-E827972C3E5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +54,10 @@ Global
 		{31C775B2-BF2F-491C-B79A-E1F0C242EA9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31C775B2-BF2F-491C-B79A-E1F0C242EA9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31C775B2-BF2F-491C-B79A-E1F0C242EA9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
