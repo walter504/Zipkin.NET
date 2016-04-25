@@ -14,6 +14,10 @@ namespace Zipkin.Core
 
         public long callCount { get; set; }
 
+        public DependencyLink()
+        {
+        }
+
         public DependencyLink(string parent, string child, long callCount)
         {
             this.parent = Ensure.ArgumentNotNull(parent, "parent").ToLower();

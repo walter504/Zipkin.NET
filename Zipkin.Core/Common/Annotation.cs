@@ -20,6 +20,10 @@ namespace Zipkin.Core
             }
         }
 
+        public Annotation()
+        { 
+        }
+
         public Annotation(long timestamp, string value, Endpoint endpoint)
         {
             this.timestamp = timestamp;

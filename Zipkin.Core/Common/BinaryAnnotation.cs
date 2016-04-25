@@ -24,6 +24,10 @@ namespace Zipkin.Core
             }
         }
 
+        public BinaryAnnotation()
+        { 
+        }
+
         public BinaryAnnotation(string key, Endpoint endpoint)
             : this(key, new byte[] { 1 }, AnnotationType.BOOL, Ensure.ArgumentNotNull(endpoint, "endpoint"))
         {

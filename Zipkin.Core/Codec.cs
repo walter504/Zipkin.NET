@@ -3,12 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Zipkin.Core.Internal;
 
 namespace Zipkin.Core
 {
     public abstract class Codec
     {
-        public abstract Codec Get(string mediaType);
+        static ThriftCodec THRIFT = new ThriftCodec();
+
+        public static Codec Get(string mediaType)
+        {
+            if (mediaType.StartsWith("application/x-thrift"))
+            {
+                return THRIFT;
+            }
+            return null;
+        }
 
         public abstract Span ReadSpan(byte[] bytes);
 

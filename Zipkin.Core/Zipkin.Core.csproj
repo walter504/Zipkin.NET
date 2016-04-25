@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -54,7 +55,9 @@
     <Compile Include="Helpers\Util.cs" />
     <Compile Include="Codec.cs" />
     <Compile Include="Adjuster\ApplyTimestampAndDuration.cs" />
-    <Compile Include="Internal\JsonCodec.cs" />
+    <Compile Include="Internal\BufferWriter.cs" />
+    <Compile Include="Internal\BufferReader.cs" />
+    <Compile Include="Internal\ThriftCodec.cs" />
     <Compile Include="ISpanStore.cs" />
     <Compile Include="Json\JsonAnnotation.cs" />
     <Compile Include="Json\JsonBinaryAnnotation.cs" />
