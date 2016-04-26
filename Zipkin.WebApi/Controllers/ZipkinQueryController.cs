@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 using Zipkin.Internal;
 using Zipkin.Json;
@@ -27,9 +28,9 @@ namespace Zipkin.WebApi.Controllers
 
         [HttpGet]
         [Route("dependencies")]
-        public IHttpActionResult GetDependencies(long endTs, long? lookback = null)
+        public async Task<IHttpActionResult> GetDependencies(long endTs, long? lookback = null)
         {
-            return Ok(spanStore.GetDependencies(endTs, lookback ?? defaultLookback));
+            return Ok(await spanStore.GetDependencies(endTs, lookback ?? defaultLookback));
         }
 
         /// <summary>
@@ -37,9 +38,9 @@ namespace Zipkin.WebApi.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("services")]
-        public IHttpActionResult GetServiceNames()
+        public async Task<IHttpActionResult> GetServiceNames()
         {
-            return Ok(spanStore.GetServiceNames());
+            return Ok(await spanStore.GetServiceNames());
         }
 
         /// <summary>
@@ -47,9 +48,9 @@ namespace Zipkin.WebApi.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("spans")]
-        public IHttpActionResult GetSpanNames(string serviceName)
+        public async Task<IHttpActionResult> GetSpanNames(string serviceName)
         {
-            return Ok(spanStore.GetSpanNames(serviceName));
+            return Ok(await spanStore.GetSpanNames(serviceName));
         }
 
         /// <summary>
@@ -57,9 +58,9 @@ namespace Zipkin.WebApi.Controllers
         /// </summary>
         /// <param name="spans"></param>
         [Route("spans")]
-        public void PostSpans([FromBody]IEnumerable<JsonSpan> spans)
+        public Task PostSpans([FromBody]IEnumerable<JsonSpan> spans)
         {
-            spanWriter.Write(spanStore, spans.Select(js => js.Invert()).ToList());
+            return spanWriter.Write(spanStore, spans.Select(js => js.Invert()).ToList());
         }
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace Zipkin.WebApi.Controllers
         /// <param name="limit"></param>
         /// <returns></returns>
         [Route("traces")]
-        public IHttpActionResult GetTraces(
+        public async Task<IHttpActionResult> GetTraces(
             string serviceName,
             string spanName = "all",
             string annotationQuery = null,
@@ -123,13 +124,14 @@ namespace Zipkin.WebApi.Controllers
                 endTs,
                 lookback,
                 limit);
-            return Ok(spanStore.GetTraces(request).Select(t => t.Select(s => new JsonSpan(s))));
+            var result = await spanStore.GetTraces(request);
+            return Ok(result.Select(t => t.Select(s => new JsonSpan(s))));
         }
 
         [Route("trace/{id}")]
-        public IHttpActionResult GetTrace(long id)
+        public async Task<IHttpActionResult> GetTrace(long id)
         {
-            var traces = spanStore.GetTracesByIds(new long[] { id });
+            var traces = await spanStore.GetTracesByIds(new long[] { id });
             if (traces.Count() == 0)
             {
                 return NotFound();

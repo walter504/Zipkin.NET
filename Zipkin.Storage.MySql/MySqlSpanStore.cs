@@ -10,6 +10,8 @@ using Zipkin.Adjuster;
 using Zipkin.Storage.MySql.Models;
 using Zipkin.Internal;
 using Zipkin.Storage;
+using System.Threading.Tasks;
+using System.Data.Common;
 
 namespace Zipkin.Storage.MySql
 {
@@ -19,12 +21,12 @@ namespace Zipkin.Storage.MySql
 
         private IDbConnection OpenConnection()
         {
-            IDbConnection conn = new MySqlConnection(sqlConnectionString);
+            var conn = new MySqlConnection(sqlConnectionString);
             conn.Open();
             return conn;
         }
 
-        public void Accept(IEnumerable<Span> spans)
+        public async Task Accept(IEnumerable<Span> spans)
         {
             var spanEntities = new List<zipkin_spans>();
             var annoEntities = new List<zipkin_annotations>();
@@ -91,12 +93,12 @@ namespace Zipkin.Storage.MySql
             using (IDbConnection conn = OpenConnection())
             using (IDbTransaction transaction = conn.BeginTransaction())
             {
-                conn.Execute(@"insert into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
+                await conn.ExecuteAsync(@"insert into zipkin_spans(trace_id,id,name,parent_id,debug,start_ts,duration) 
                     values(@trace_id,@id,@name,@parent_id,@debug,@start_ts,@duration)
                     on duplicate key update name=@name, start_ts=@start_ts, duration=@duration", 
                     spanEntities, transaction);
 
-                conn.Execute(@"insert ignore into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
+                await conn.ExecuteAsync(@"insert ignore into zipkin_annotations(trace_id, span_id, a_key, a_value, a_type, a_timestamp,endpoint_ipv4, endpoint_port, endpoint_service_name) 
                     values(@trace_id,@span_id,@a_key,@a_value,@a_type,@a_timestamp,@endpoint_ipv4,@endpoint_port,@endpoint_service_name)", 
                     annoEntities, transaction);
 
@@ -104,17 +106,19 @@ namespace Zipkin.Storage.MySql
             }
         }
 
-        public IEnumerable<IEnumerable<Span>> GetTracesByIds(IEnumerable<long> traceIds)
+        public Task<IEnumerable<IEnumerable<Span>>> GetTracesByIds(IEnumerable<long> traceIds)
         {
-            return 0 == traceIds.Count() ? Enumerable.Empty<IEnumerable<Span>>() : GetTraces(null, traceIds);
+            return 0 == traceIds.Count() 
+                ? Task.FromResult(Enumerable.Empty<IEnumerable<Span>>()) 
+                : GetTraces(null, traceIds);
         }
 
-        public IEnumerable<IEnumerable<Span>> GetTraces(QueryRequest request)
+        public Task<IEnumerable<IEnumerable<Span>>> GetTraces(QueryRequest request)
         {
             return GetTraces(request, null);
         }
 
-        private IEnumerable<IEnumerable<Span>> GetTraces(QueryRequest request, IEnumerable<long> traceIds)
+        private async Task<IEnumerable<IEnumerable<Span>>> GetTraces(QueryRequest request, IEnumerable<long> traceIds)
         {
             var spansWithoutAnnotations = new Dictionary<long, List<Span>>();
             var dbAnnotations = new Dictionary<KeyValuePair<long, long>, List<zipkin_annotations>>();
@@ -122,11 +126,12 @@ namespace Zipkin.Storage.MySql
             {
                 if (request != null)
                 {
-                    traceIds = conn.Query<long>(GetTraceIdQuery(request));
+                    traceIds = await conn.QueryAsync<long>(GetTraceIdQuery(request));
                 }
                 if (traceIds.Count() != 0)
                 {
-                    spansWithoutAnnotations = conn.Query<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds order by start_ts", new { traceIds = traceIds })
+                    spansWithoutAnnotations = (await conn.QueryAsync<zipkin_spans>("select * from zipkin_spans where trace_id in @traceIds order by start_ts", 
+                        new { traceIds = traceIds }))
                         .Select(s =>
                         {
                             return new Span(
@@ -140,7 +145,8 @@ namespace Zipkin.Storage.MySql
                             );
                         }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.ToList());
 
-                    dbAnnotations = conn.Query<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceIds order by a_timestamp, a_key", new { traceIds = traceIds })
+                    dbAnnotations = (await conn.QueryAsync<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceIds order by a_timestamp, a_key", 
+                        new { traceIds = traceIds }))
                         .GroupBy(a => new KeyValuePair<long, long>(a.trace_id, a.span_id)).ToDictionary(g => g.Key, g => g.ToList());
                 }
             }
@@ -248,46 +254,46 @@ namespace Zipkin.Storage.MySql
                 + " and {0}.a_key = '" + key + "'", joinTable);
         }
 
-        public IEnumerable<string> GetServiceNames()
+        public Task<IEnumerable<string>> GetServiceNames()
         {
             using (IDbConnection conn = OpenConnection())
             {
-                return conn.Query<string>(@"select distinct endpoint_service_name 
+                return conn.QueryAsync<string>(@"select distinct endpoint_service_name 
                     from zipkin_annotations 
                     where endpoint_service_name is not null and endpoint_service_name != ''");
             }
         }
 
-        public IEnumerable<string> GetSpanNames(string serviceName)
+        public Task<IEnumerable<string>> GetSpanNames(string serviceName)
         {
             using (IDbConnection conn = OpenConnection())
             {
-                return conn.Query<string>(@"select distinct s.name
+                return conn.QueryAsync<string>(@"select distinct s.name
                     from zipkin_spans as s
                         join zipkin_annotations as a on s.trace_id = a.trace_id and s.id = a.span_id
                     where a.endpoint_service_name = @serviceName", new { serviceName = serviceName });
             }
         }
 
-        public IEnumerable<DependencyLink> GetDependencies(long endTs, long? lookback)
+        public async Task<IEnumerable<DependencyLink>> GetDependencies(long endTs, long? lookback)
         {
             endTs = endTs * 1000;
             using (IDbConnection conn = OpenConnection())
             {
-                var parentChild = conn.Query(@"select trace_id, parent_id, id
+                var parentChild = (await conn.QueryAsync(@"select trace_id, parent_id, id
                         from zipkin_spans 
                         where parent_id is not null
                             and start_ts <= " + endTs
-                        + (lookback.HasValue ? (" and start_ts > " + (endTs - lookback.Value * 1000)) : ""))
+                        + (lookback.HasValue ? (" and start_ts > " + (endTs - lookback.Value * 1000)) : "")))
                     .Select(r => new { trace_id = (long)r.trace_id, parent_id = (long)r.parent_id, id = (long)r.id})
                     .GroupBy(r => r.trace_id).ToDictionary(g => g.Key, g => g.ToList());
 
-                var traceSpanServiceName = conn.Query(@"select distinct trace_id, span_id, endpoint_service_name
+                var traceSpanServiceName = (await conn.QueryAsync(@"select distinct trace_id, span_id, endpoint_service_name
                         from zipkin_annotations 
                         where trace_id in @traceIds
                             and a_key in ('sr', 'sa') 
                             and endpoint_service_name is not null
-                        group by trace_id, span_id", new { traceIds = parentChild.Keys.ToArray() })
+                        group by trace_id, span_id", new { traceIds = parentChild.Keys.ToArray() }))
                     .ToDictionary(r => new KeyValuePair<long, long>(r.trace_id, r.span_id), r => (string)r.endpoint_service_name);
 
                 // links are merged by mapping to parent/child and summing corresponding links

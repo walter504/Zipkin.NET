@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using Zipkin.Storage;
 
@@ -15,10 +16,10 @@ namespace Zipkin.WebApi
             this.sampler = sampler;
         }
 
-        public void Write(ISpanStore spanStore, IEnumerable<Span> spans)
+        public Task Write(ISpanStore spanStore, IEnumerable<Span> spans)
         {
             var sampledSpans = spans.Where(s => (s.debug.HasValue && s.debug.Value) || sampler.IsSampled(s.traceId)).ToList();
-            spanStore.Accept(sampledSpans);
+            return spanStore.Accept(sampledSpans);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Zipkin.Storage
 {
@@ -8,7 +9,7 @@ namespace Zipkin.Storage
         /**
          * Sinks the given spans, ignoring duplicate annotations.
          */
-        void Accept(IEnumerable<Span> spans);
+        Task Accept(IEnumerable<Span> spans);
 
         /**
          * Get the available trace information from the storage system. Spans in trace are sorted by the
@@ -17,7 +18,7 @@ namespace Zipkin.Storage
          * <p/> Results are sorted in order of the first span's timestamp, and contain up to {@link
          * QueryRequest#limit} elements.
          */
-        IEnumerable<IEnumerable<Span>> GetTraces(QueryRequest request);
+        Task<IEnumerable<IEnumerable<Span>>> GetTraces(QueryRequest request);
 
         /**
          * Get the available trace information from the storage system. Spans in trace are sorted by the
@@ -26,21 +27,21 @@ namespace Zipkin.Storage
          * <p/> Results are sorted in order of the first span's timestamp, and contain less elements than
          * trace IDs when corresponding traces aren't available.
          */
-        IEnumerable<IEnumerable<Span>> GetTracesByIds(IEnumerable<long> traceIds);
+        Task<IEnumerable<IEnumerable<Span>>> GetTracesByIds(IEnumerable<long> traceIds);
 
         /**
          * Get all the {@link Endpoint#serviceName service names}.
          *
          * <p/> Results are sorted lexicographically
          */
-        IEnumerable<String> GetServiceNames();
+        Task<IEnumerable<string>> GetServiceNames();
 
         /**
          * Get all the span names for a particular {@link Endpoint#serviceName}.
          *
          * <p/> Results are sorted lexicographically
          */
-        IEnumerable<String> GetSpanNames(String serviceName);
+        Task<IEnumerable<string>> GetSpanNames(string serviceName);
 
         /**
          * Returns dependency links derived from spans.
@@ -57,6 +58,6 @@ namespace Zipkin.Storage
          * @return dependency links in an interval contained by (endTs - lookback) or empty if none are
          *         found
          */
-        IEnumerable<DependencyLink> GetDependencies(long endTs, long? lookback);
+        Task<IEnumerable<DependencyLink>> GetDependencies(long endTs, long? lookback);
     }
 }
