@@ -6,8 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Zipkin.Core;
-using Zipkin.Core.Json;
+using Zipkin.Json;
 
 namespace Zipkin.TraceGen
 {

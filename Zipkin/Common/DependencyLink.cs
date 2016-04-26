@@ -1,0 +1,58 @@
+﻿using System;
+using Zipkin.Internal;
+
+namespace Zipkin
+{
+    public class DependencyLink
+    {
+        public string parent { get; set; }
+
+        public string child { get; set; }
+
+        public long callCount { get; set; }
+
+        public DependencyLink()
+        {
+        }
+
+        public DependencyLink(string parent, string child, long callCount)
+        {
+            this.parent = Ensure.ArgumentNotNull(parent, "parent").ToLower();
+            this.child = Ensure.ArgumentNotNull(child, "child").ToLower();
+            this.callCount = callCount;
+        }
+
+
+        //public string tostring() {
+        //  return JsonCodec.DEPENDENCY_LINK_ADAPTER.toJson(this);
+        //}
+
+        public override bool Equals(Object o)
+        {
+            if (o == this)
+            {
+                return true;
+            }
+            if (o is DependencyLink)
+            {
+                DependencyLink that = (DependencyLink)o;
+                return (this.parent.Equals(that.parent))
+                    && (this.child.Equals(that.child))
+                    && (this.callCount == that.callCount);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            int h = 1;
+            h *= 1000003;
+            h ^= parent.GetHashCode();
+            h *= 1000003;
+            h ^= child.GetHashCode();
+            h *= 1000003;
+            h ^= (int)((callCount >> 32) ^ callCount);
+            return h;
+        }
+    }
+}

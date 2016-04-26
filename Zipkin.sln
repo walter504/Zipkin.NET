@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.Core", "Zipkin.Core\Zipkin.Core.csproj", "{695DD045-6870-4575-94BB-93F6ED9D6342}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin", "Zipkin\Zipkin.csproj", "{695DD045-6870-4575-94BB-93F6ED9D6342}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.WebApi", "Zipkin.WebApi\Zipkin.WebApi.csproj", "{02F21F4D-5258-4D3B-A6A0-B88A51436B05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.DbStore", "Zipkin.DbStore\Zipkin.DbStore.csproj", "{D984B242-B1B5-4749-A569-BF0DF9BE9BCC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.Storage.MySql", "Zipkin.Storage.MySql\Zipkin.Storage.MySql.csproj", "{D984B242-B1B5-4749-A569-BF0DF9BE9BCC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{07C07583-E9EE-43F2-9B3D-A97E884797F5}"
 	ProjectSection(SolutionItems) = preProject

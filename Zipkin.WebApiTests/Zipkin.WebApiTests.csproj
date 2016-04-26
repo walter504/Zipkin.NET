@@ -60,13 +60,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Zipkin.Core\Zipkin.Core.csproj">
+    <ProjectReference Include="..\Zipkin\Zipkin.csproj">
       <Project>{695dd045-6870-4575-94bb-93f6ed9d6342}</Project>
-      <Name>Zipkin.Core</Name>
+      <Name>Zipkin</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Zipkin.DbStore\Zipkin.DbStore.csproj">
+    <ProjectReference Include="..\Zipkin.Storage.MySql\Zipkin.Storage.MySql.csproj">
       <Project>{d984b242-b1b5-4749-a569-bf0df9be9bcc}</Project>
-      <Name>Zipkin.DbStore</Name>
+      <Name>Zipkin.Storage.MySql</Name>
     </ProjectReference>
     <ProjectReference Include="..\Zipkin.WebApi\Zipkin.WebApi.csproj">
       <Project>{02F21F4D-5258-4D3B-A6A0-B88A51436B05}</Project>

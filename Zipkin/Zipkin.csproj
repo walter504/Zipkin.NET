@@ -4,20 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{31C775B2-BF2F-491C-B79A-E1F0C242EA9E}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{695DD045-6870-4575-94BB-93F6ED9D6342}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zipkin.TraceGen</RootNamespace>
-    <AssemblyName>Zipkin.TraceGen</AssemblyName>
+    <RootNamespace>Zipkin</RootNamespace>
+    <AssemblyName>Zipkin</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -25,9 +20,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -36,10 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,28 +40,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Adjuster\CorrectForClockSkew.cs" />
+    <Compile Include="Adjuster\MergeById.cs" />
+    <Compile Include="Common\AnnotationType.cs" />
+    <Compile Include="Common\Annotation.cs" />
+    <Compile Include="Common\BinaryAnnotation.cs" />
+    <Compile Include="Common\SpanNode.cs" />
+    <Compile Include="Common\Trace.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="Common\DependencyLink.cs" />
+    <Compile Include="Common\Endpoint.cs" />
+    <Compile Include="Internal\Ensure.cs" />
+    <Compile Include="Internal\InetAddresses.cs" />
+    <Compile Include="Internal\Util.cs" />
+    <Compile Include="Codec.cs" />
+    <Compile Include="Adjuster\ApplyTimestampAndDuration.cs" />
+    <Compile Include="Internal\BufferWriter.cs" />
+    <Compile Include="Internal\BufferReader.cs" />
+    <Compile Include="Thrift\ThriftCodec.cs" />
+    <Compile Include="Storage\ISpanStore.cs" />
+    <Compile Include="Json\JsonAnnotation.cs" />
+    <Compile Include="Json\JsonBinaryAnnotation.cs" />
+    <Compile Include="Json\JsonEndpoint.cs" />
+    <Compile Include="Json\JsonSpan.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TraceGen.cs" />
+    <Compile Include="Storage\QueryRequest.cs" />
+    <Compile Include="Sampler.cs" />
+    <Compile Include="Common\Span.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Zipkin\Zipkin.csproj">
-      <Project>{695dd045-6870-4575-94bb-93f6ed9d6342}</Project>
-      <Name>Zipkin</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

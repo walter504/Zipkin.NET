@@ -1,11 +1,11 @@
-﻿using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using Zipkin.Core;
-using Zipkin.Core.Json;
+using RestSharp;
+using Zipkin.Internal;
+using Zipkin.Json;
 using Zipkin.UI.Web.ViewModels;
 using WebUtil = Zipkin.UI.Web.Helpers.Util;
 

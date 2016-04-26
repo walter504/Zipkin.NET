@@ -209,9 +209,9 @@
     <Compile Include="ViewModels\MustacheTraceSummary.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Zipkin.Core\Zipkin.Core.csproj">
+    <ProjectReference Include="..\Zipkin\Zipkin.csproj">
       <Project>{695dd045-6870-4575-94bb-93f6ed9d6342}</Project>
-      <Name>Zipkin.Core</Name>
+      <Name>Zipkin</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

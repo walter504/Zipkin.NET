@@ -4,16 +4,15 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using Zipkin.Core;
-using Zipkin.Core.Json;
+using Zipkin.Internal;
+using Zipkin.Json;
+using Zipkin.Storage;
 
 namespace Zipkin.WebApi.Controllers
 {
     [RoutePrefix("api/v1")]
     public class ZipkinQueryController : ApiController
     {
-        
-
         const int defaultLookback = 3600 * 24 * 7 * 1000; // 7 days in millis
         const int defaultLimit = 10;
 

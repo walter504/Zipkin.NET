@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using Tracing.Core;
-using Zipkin.Core;
-
+using Zipkin;
+using Zipkin.Internal;
 using WebUtil = Zipkin.UI.Web.Helpers.Util;
 
 namespace Zipkin.UI.Web

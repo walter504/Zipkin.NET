@@ -8,8 +8,9 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Security;
 using System.Web.SessionState;
-using Zipkin.Core;
-using Zipkin.DbStore;
+using Zipkin;
+using Zipkin.Storage.MySql;
+using Zipkin.Storage;
 
 namespace Zipkin.WebApi
 {
@@ -45,7 +46,7 @@ namespace Zipkin.WebApi
             //log4net.Config.XmlConfigurator.Configure();
             builder.Register(c => Sampler.Create(1.0F)).As<Sampler>().SingleInstance();
             builder.RegisterType<ZipkinSpanWriter>();
-            builder.RegisterType<DbSpanStore>().As<ISpanStore>();
+            builder.RegisterType<MySqlSpanStore>().As<ISpanStore>();
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)

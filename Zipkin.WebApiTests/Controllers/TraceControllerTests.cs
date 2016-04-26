@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Zipkin.WebApi.Controllers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zipkin.Core;
+using Zipkin;
 using Newtonsoft.Json;
+
 namespace Zipkin.WebApi.Controllers.Tests
 {
     [TestClass()]

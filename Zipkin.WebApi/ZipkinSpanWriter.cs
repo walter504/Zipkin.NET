@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using Zipkin.Core;
+using Zipkin.Storage;
 
 namespace Zipkin.WebApi
 {
