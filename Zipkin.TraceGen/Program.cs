@@ -26,29 +26,37 @@ namespace Zipkin.TraceGen
         static void Main(string[] args)
         {
             GenerateTraces();
+            Console.ReadKey();
         }
 
         static void GenerateTraces()
         {
             var traceGen = new TraceGen(traceCount, maxDepth);
             var traces = traceGen.Apply();
-            traces.ForEach(span => 
-            {
-                LogEntry(span);
-            });
+            //var jsonSpans = traces.Select(s => new JsonSpan(s)).ToList();
+            //var data = JsonConvert.SerializeObject(jsonSpans);
+
+            //var data = "";
+            //var jsonSpans = JsonConvert.DeserializeObject<List<JsonSpan>>(data);
+            //var traces = jsonSpans.Select(js => js.Invert()).ToList();
+
+            var startTs = DateTime.Now.Ticks;
+
+            LogEntry(traces);
+            Console.WriteLine("post {0} spans cost {1}ms", traces.Count, (DateTime.Now.Ticks - startTs) / 10000);
 
             if (!generateOnly)
             {
             }
         }
 
-        static void LogEntry(Span span)
+        static void LogEntry(List<Span> spans)
         {
-            var jsonSpans = new List<JsonSpan>() { new JsonSpan(span) };
-            var data = JsonConvert.SerializeObject(jsonSpans);
+            var thriftCodec = new ThriftCodec();
+            var bytes = thriftCodec.WriteSpans(spans);
             queryClient.Encoding = System.Text.Encoding.UTF8;
-            queryClient.Headers.Add("Content-Type", "application/json");
-            queryClient.UploadString("/api/v1/spans", "POST", data);
+            queryClient.Headers.Add("Content-Type", "application/x-thrift");
+            queryClient.UploadData("/api/v1/spans", "POST", bytes);
         }
 
         static void querySpan(

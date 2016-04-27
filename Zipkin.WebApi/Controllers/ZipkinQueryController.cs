@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using Zipkin.Internal;
 using Zipkin.Json;
@@ -58,9 +60,30 @@ namespace Zipkin.WebApi.Controllers
         /// </summary>
         /// <param name="spans"></param>
         [Route("spans")]
-        public Task PostSpans([FromBody]IEnumerable<JsonSpan> spans)
+        public async Task<IHttpActionResult> PostSpans()
         {
-            return spanWriter.Write(spanStore, spans.Select(js => js.Invert()).ToList());
+            var bytes = await Request.Content.ReadAsByteArrayAsync();
+            List<Span> spans = null;
+            var contentType = HttpContext.Current.Request.ContentType;
+            if (contentType.StartsWith("application/json"))
+            {
+                var jsons = Jil.JSON.Deserialize<List<JsonSpan>>(Encoding.UTF8.GetString(bytes));
+                spans = jsons.Select(js => js.Invert()).ToList();
+            }
+            else
+            {
+                var codec = Codec.Get(contentType);
+                if (codec != null)
+                {
+                    spans = codec.ReadSpans(bytes);
+                }
+            }
+            if (spans == null)
+            {
+                return StatusCode(HttpStatusCode.UnsupportedMediaType);
+            }
+            await spanWriter.Write(spanStore, spans);
+            return Ok();
         }
 
         /// <summary>
