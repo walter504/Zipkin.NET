@@ -11,6 +11,8 @@ using System.Web.SessionState;
 using Zipkin;
 using Zipkin.Storage.MySql;
 using Zipkin.Storage;
+using Zipkin.Storage.MongoDB;
+using System.Configuration;
 
 namespace Zipkin.WebApi
 {
@@ -46,7 +48,9 @@ namespace Zipkin.WebApi
             //log4net.Config.XmlConfigurator.Configure();
             builder.Register(c => Sampler.Create(1.0F)).As<Sampler>().SingleInstance();
             builder.RegisterType<ZipkinSpanWriter>();
-            builder.RegisterType<MySqlSpanStore>().As<ISpanStore>();
+            builder.RegisterType<MongoDBSpanStore>().As<ISpanStore>()
+                .WithParameter("url", ConfigurationManager.AppSettings["mongodb"])
+                .WithParameter("spanTTL", new TimeSpan(3, 0, 0, 0));
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)

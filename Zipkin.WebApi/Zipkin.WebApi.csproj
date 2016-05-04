@@ -114,6 +114,10 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Zipkin.Storage.Mongodb\Zipkin.Storage.MongoDB.csproj">
+      <Project>{22a479be-bfe7-4041-801a-eb6a8a26271d}</Project>
+      <Name>Zipkin.Storage.MongoDB</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Zipkin\Zipkin.csproj">
       <Project>{695dd045-6870-4575-94bb-93f6ed9d6342}</Project>
       <Name>Zipkin</Name>

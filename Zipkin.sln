@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.TraceGen", "Zipkin.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.Sampler", "Zipkin.Sampler\Zipkin.Sampler.csproj", "{722662CC-8CF7-4E97-BED4-E827972C3E5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zipkin.Storage.MongoDB", "Zipkin.Storage.MongoDB\Zipkin.Storage.MongoDB.csproj", "{22A479BE-BFE7-4041-801A-EB6A8A26271D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{722662CC-8CF7-4E97-BED4-E827972C3E5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22A479BE-BFE7-4041-801A-EB6A8A26271D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22A479BE-BFE7-4041-801A-EB6A8A26271D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22A479BE-BFE7-4041-801A-EB6A8A26271D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22A479BE-BFE7-4041-801A-EB6A8A26271D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
