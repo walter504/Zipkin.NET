@@ -5,7 +5,7 @@ namespace Zipkin
 {
     public abstract class Codec
     {
-        static ThriftCodec THRIFT = new ThriftCodec();
+        public readonly static ThriftCodec THRIFT = new ThriftCodec();
 
         public static Codec Get(string mediaType)
         {
