@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Cassandra;
 using Common.Logging;
 using System.Threading;
+using Zipkin.Internal;
 
 namespace Zipkin.Storage.Cassandra
 {
@@ -184,15 +185,18 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":ttl_", ttl.ToString());
         }
 
-        /**
-     * Get the available trace information from the storage system.
-     * Spans in trace should be sorted by the first annotation timestamp
-     * in that span. First event should be first in the spans list.
-     * <p>
-     * The return list will contain only spans that have been found, thus
-     * the return list may not match the provided list of ids.
-     */
-        public async Task<Dictionary<long, List<Span>>> getSpansByTraceIds(long[] traceIds, int limit)
+        /// <summary>
+        /// Get the available trace information from the storage system.
+        /// Spans in trace should be sorted by the first annotation timestamp
+        /// in that span. First event should be first in the spans list.
+        /// </summary>
+        /// <param name="traceIds"></param>
+        /// <param name="limit"></param>
+        /// <returns>
+        /// The return list will contain only spans that have been found, thus
+        /// the return list may not match the provided list of ids.
+        /// </returns>
+        public async Task<Dictionary<long, List<Span>>> GetSpansByTraceIds(long[] traceIds, int limit)
         {
             if (traceIds.Length == 0)
             {
@@ -237,6 +241,70 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":limit", limit.ToString());
         }
 
+        public Task StoreDependencies(long epochDayMillis, byte[] dependencies)
+        {
+            DateTimeOffset startFlooredToDay = Util.FromUnixTimeMilliseconds(epochDayMillis);
+            try
+            {
+                BoundStatement bound = insertDependencies.Bind(new
+                {
+                    day = startFlooredToDay,
+                    dependencies = dependencies
+                });
+
+                if (log.IsDebugEnabled)
+                {
+                    log.Debug(DebugInsertDependencies(startFlooredToDay, dependencies));
+                }
+                return session.ExecuteAsync(bound);
+            }
+            catch (Exception ex)
+            {
+                log.Error("failed " + DebugInsertDependencies(startFlooredToDay, dependencies));
+                throw ex;
+            }
+        }
+
+        private string DebugInsertDependencies(DateTimeOffset startFlooredToDay, byte[] dependencies)
+        {
+            return insertDependenciesQuery
+                .Replace(":day", startFlooredToDay.ToString())
+                .Replace(":dependencies", Convert.ToBase64String(dependencies));
+        }
+
+        public async Task<List<DependencyLink>> GetDependencies(long endTs, long? lookback)
+        {
+            DateTimeOffset endDate = Util.FromUnixTimeMilliseconds(endTs).Date;
+            DateTimeOffset startDate = Util.FromUnixTimeMilliseconds(endTs - lookback ?? 0).Date;
+
+            List<DateTimeOffset> days = GetDays(startDate, endDate);
+            try
+            {
+                BoundStatement bound = selectDependencies.Bind(new { days = days });
+                if (log.IsDebugEnabled)
+                {
+                    log.Debug(DebugSelectDependencies(days));
+                }
+                var result = await session.ExecuteAsync(bound);
+                var dependencies = new List<DependencyLink>();
+                foreach (var row in result.GetRows())
+                {
+                    dependencies.AddRange(Codec.THRIFT.ReadDependencyLinks(row.GetValue<byte[]>("dependencies")));
+                }
+                return dependencies;
+            }
+            catch (Exception ex)
+            {
+                log.Error("failed " + DebugSelectDependencies(days), ex);
+                throw ex;
+            }
+        }
+
+        private string DebugSelectDependencies(List<DateTimeOffset> days)
+        {
+            return selectDependenciesQuery.Replace(":days", days.ToString());
+        }
+
         public Task StoreServiceName(string serviceName, int ttl)
         {
             if (writtenNames.Value.Add(serviceName))
@@ -269,7 +337,7 @@ namespace Zipkin.Storage.Cassandra
         {
             return insertServiceNameQuery
                 .Replace(":service_name", serviceName)
-                .Replace(":ttl_", ttl.ToString());
+                .Replace(":ttl", ttl.ToString());
         }
 
         public Task StoreSpanName(string serviceName, string spanName, int ttl)
@@ -290,7 +358,6 @@ namespace Zipkin.Storage.Cassandra
                     {
                         log.Debug(DebugInsertSpanName(serviceName, spanName, ttl));
                     }
-
                     return session.ExecuteAsync(bound);
                 }
                 catch (Exception ex)
@@ -306,18 +373,27 @@ namespace Zipkin.Storage.Cassandra
             }
         }
 
-        private String DebugInsertSpanName(String serviceName, String spanName, int ttl)
+        private string DebugInsertSpanName(string serviceName, string spanName, int ttl)
         {
             return insertSpanNameQuery
                 .Replace(":service_name", serviceName)
                 .Replace(":span_name", spanName)
-                .Replace(":ttl_", ttl.ToString());
+                .Replace(":ttl", ttl.ToString());
         }
-
 
         private string CreateSpanColumnName(Span span)
         {
             return string.Format("{0}_{1}_{2}", span.id, span.annotations.GetHashCode(), span.binaryAnnotations.GetHashCode());
+        }
+
+        private static List<DateTimeOffset> GetDays(DateTimeOffset from, DateTimeOffset to)
+        {
+            var days = new List<DateTimeOffset>();
+            for (var time = from; time <= to; time = time.AddDays(1))
+            {
+                days.Add(time);
+            }
+            return days;
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Zipkin.Internal
             return timespan.Ticks / 10000;
         }
 
-        public static long ToUnixTimMicroseconds(DateTime dt)
+        public static long ToUnixTimeMicroseconds(DateTime dt)
         {
             TimeSpan timespan = TimeZoneInfo.ConvertTimeToUtc(dt).Subtract(UnixEpoch);
             return timespan.Ticks / 10;
@@ -66,6 +66,11 @@ namespace Zipkin.Internal
             return UnixEpoch.AddTicks(micros * 10).ToLocalTime();
         }
 
+        public static long MidnightUTC(long mills)
+        {
+            var day = Util.FromUnixTimeMilliseconds(mills).Date;
+            return Util.ToUnixTimeMilliseconds(day);
+        }
 
         public static long HexToLong(string hex)
         {
