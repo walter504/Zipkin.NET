@@ -6,7 +6,7 @@ namespace Zipkin.Adjuster
 {
     public class MergeById
     {
-        public static IList<Span> Apply(IList<Span> spans)
+        public static List<Span> Apply(IEnumerable<Span> spans)
         {
             var result = new List<Span>();
             var spanIdToSpans = new Dictionary<long, List<Span>>();

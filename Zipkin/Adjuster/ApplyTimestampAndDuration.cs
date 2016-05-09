@@ -6,7 +6,7 @@ namespace Zipkin.Adjuster
 {
     public class ApplyTimestampAndDuration
     {
-        public static List<Span> Apply(List<Span> spans)
+        public static List<Span> Apply(IEnumerable<Span> spans)
         {
             var newSpans = spans.Select(Apply).Where(s => s.timestamp.HasValue).ToList();
             newSpans.Sort();

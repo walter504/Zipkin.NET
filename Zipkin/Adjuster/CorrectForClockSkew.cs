@@ -6,12 +6,12 @@ namespace Zipkin.Adjuster
 {
     public class CorrectForClockSkew
     {
-        public static List<Span> Apply(List<Span> spans)
+        public static List<Span> Apply(IEnumerable<Span> spans)
         {
             var root = spans.FirstOrDefault(s => !s.parentId.HasValue);
             if (root == null)
             {
-                return spans;
+                return spans.ToList();
             }
             else
             {
