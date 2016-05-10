@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Zipkin.Internal
 {
-    internal static class Ensure
+    public static class Ensure
     {
         public static T ArgumentNotNull<T>(T reference, string errorMessageTemplate, params object[] errorMessageArgs) {
             if (reference == null) {

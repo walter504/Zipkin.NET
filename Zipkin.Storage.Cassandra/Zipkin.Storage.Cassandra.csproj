@@ -57,8 +57,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CassandraDependencyStore.cs" />
     <Compile Include="CassandraSpanStore.cs" />
+    <Compile Include="CassandraStorage.cs" />
+    <Compile Include="SessionFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repository.cs" />
     <Compile Include="Schema.cs" />
   </ItemGroup>
   <ItemGroup>

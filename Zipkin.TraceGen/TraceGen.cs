@@ -116,7 +116,7 @@ namespace Zipkin.TraceGen
             var curTime = time.AddMilliseconds(1);
 
             var svrAnnos = new List<Annotation>();
-            svrAnnos.Add(new Annotation(Util.ToUnixTimMicroseconds(curTime), Constants.ServerRecv, endpoint));
+            svrAnnos.Add(new Annotation(Util.ToUnixTimeMicroseconds(curTime), Constants.ServerRecv, endpoint));
 
             var svrBinAnnos = new List<BinaryAnnotation>();
             var randInt = rnd.Next(3);
@@ -131,7 +131,7 @@ namespace Zipkin.TraceGen
             randInt = rnd.Next(5) + 1;
             for (var i = 0; i < randInt; i ++)
             {
-                svrAnnos.Add(new Annotation(Util.ToUnixTimMicroseconds(curTime), GetRandSvcName(), endpoint));
+                svrAnnos.Add(new Annotation(Util.ToUnixTimeMicroseconds(curTime), GetRandSvcName(), endpoint));
                 curTime = curTime.AddMilliseconds(rnd.Next(10));
             }
 
@@ -149,9 +149,9 @@ namespace Zipkin.TraceGen
                         var binAnnos = new List<BinaryAnnotation>();
 
                         var delay = rnd.Next(10) > 6 ? rnd.Next(10) : 0;
-                        annos.Add(new Annotation(Util.ToUnixTimMicroseconds(curTime) + delay, Constants.ClientSend, nextEp));
+                        annos.Add(new Annotation(Util.ToUnixTimeMicroseconds(curTime) + delay, Constants.ClientSend, nextEp));
                         var thisTime = DoRpc(trace, curTime, rnd.Next(depth), rpcName, nextEp, thisSpanId, thisParentId).AddMilliseconds(1);
-                        annos.Add(new Annotation(Util.ToUnixTimMicroseconds(thisTime), Constants.ClientRecv, nextEp));
+                        annos.Add(new Annotation(Util.ToUnixTimeMicroseconds(thisTime), Constants.ClientRecv, nextEp));
 
                         var thisTimestamp = annos[0].timestamp;
                         var thisDuration = annos[1].timestamp - annos[0].timestamp;
@@ -162,7 +162,7 @@ namespace Zipkin.TraceGen
                 curTime = times.Max();
             }
 
-            svrAnnos.Add(new Annotation(Util.ToUnixTimMicroseconds(curTime), Constants.ServerSend, endpoint));
+            svrAnnos.Add(new Annotation(Util.ToUnixTimeMicroseconds(curTime), Constants.ServerSend, endpoint));
             var timestamp = svrAnnos[0].timestamp;
             var duration = svrAnnos[svrAnnos.Count - 1].timestamp - svrAnnos[0].timestamp;
             trace.AddSpan(spanName, spanId, parentSpanId, timestamp, duration, svrAnnos, svrBinAnnos);

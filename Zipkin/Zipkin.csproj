@@ -51,12 +51,14 @@
     <Compile Include="Common\DependencyLink.cs" />
     <Compile Include="Common\Endpoint.cs" />
     <Compile Include="Internal\Ensure.cs" />
+    <Compile Include="Internal\HostAndPort.cs" />
     <Compile Include="Internal\InetAddresses.cs" />
     <Compile Include="Internal\Util.cs" />
     <Compile Include="Codec.cs" />
     <Compile Include="Adjuster\ApplyTimestampAndDuration.cs" />
     <Compile Include="Internal\BufferWriter.cs" />
     <Compile Include="Internal\BufferReader.cs" />
+    <Compile Include="Storage\IDependencyStore.cs" />
     <Compile Include="Thrift\ThriftCodec.cs" />
     <Compile Include="Storage\ISpanStore.cs" />
     <Compile Include="Json\JsonAnnotation.cs" />

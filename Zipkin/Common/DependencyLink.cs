@@ -1,8 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using Zipkin.Internal;
 
 namespace Zipkin
 {
+    public class Dependencies
+    {
+        public long StartTs { get; set; }
+        public long EndTs { get; set; }
+        public IEnumerable<DependencyLink> Links { get; set; }
+        public Dependencies(long startTs, long endTs, IEnumerable<DependencyLink> links)
+        {
+            StartTs = startTs;
+            EndTs = endTs;
+            Links = links;
+        }
+    }
+
     public class DependencyLink
     {
         public string parent { get; set; }
