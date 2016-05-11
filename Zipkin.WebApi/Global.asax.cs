@@ -16,7 +16,6 @@ namespace Zipkin.WebApi
 {
     public class Global : System.Web.HttpApplication
     {
-
         protected void Application_Start(object sender, EventArgs e)
         {
             GlobalConfiguration.Configure(WebApiConfig.Register);
@@ -45,8 +44,10 @@ namespace Zipkin.WebApi
         {
             //log4net.Config.XmlConfigurator.Configure();
             builder.Register(c => Sampler.Create(1.0F)).As<Sampler>().SingleInstance();
-            builder.RegisterType<ZipkinSpanWriter>();
-            builder.RegisterType<MySqlSpanStore>().As<ISpanStore>();
+            builder.RegisterType<ZipkinSpanWriter>().SingleInstance();
+            //builder.RegisterType<MySqlSpanStore>().As<ISpanStore>();
+
+
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)
