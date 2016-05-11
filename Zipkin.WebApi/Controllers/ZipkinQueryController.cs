@@ -21,10 +21,12 @@ namespace Zipkin.WebApi.Controllers
 
         private readonly ISpanStore spanStore;
         private readonly ZipkinSpanWriter spanWriter;
+        private readonly IDependencyStore dependencyStore;
 
-        public ZipkinQueryController(ISpanStore spanStore, ZipkinSpanWriter spanWriter)
+        public ZipkinQueryController(ISpanStore spanStore, IDependencyStore dependencyStore, ZipkinSpanWriter spanWriter)
         {
             this.spanStore = spanStore;
+            this.dependencyStore = dependencyStore;
             this.spanWriter = spanWriter;
         }
 
@@ -32,7 +34,7 @@ namespace Zipkin.WebApi.Controllers
         [Route("dependencies")]
         public async Task<IHttpActionResult> GetDependencies(long endTs, long? lookback = null)
         {
-            return Ok(await spanStore.GetDependencies(endTs, lookback ?? defaultLookback));
+            return Ok(await dependencyStore.GetDependencies(endTs, lookback ?? defaultLookback));
         }
 
         /// <summary>

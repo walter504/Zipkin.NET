@@ -122,7 +122,7 @@ namespace Zipkin.Storage.Cassandra
             }
             else if (request.serviceName != null)
             {
-                traceIdToTimestamp = Repo.GetTraceIdsByServiceName(new List<string> { request.serviceName },
+                traceIdToTimestamp = Repo.GetTraceIdsByServiceNames(new List<string> { request.serviceName },
                     request.endTs * 1000, request.lookback * 1000, request.limit);
             }
             else
@@ -130,7 +130,7 @@ namespace Zipkin.Storage.Cassandra
                 //checkArgument(selectTraceIdsByServiceNames != null,
                 //    "getTraces without serviceName requires Cassandra 2.2 or later");
                 var serviceNames = await Repo.GetServiceNames();
-                traceIdToTimestamp = Repo.GetTraceIdsByServiceName(serviceNames,
+                traceIdToTimestamp = Repo.GetTraceIdsByServiceNames(serviceNames,
                             request.endTs * 1000, request.lookback * 1000, request.limit);
             }
 
@@ -149,7 +149,7 @@ namespace Zipkin.Storage.Cassandra
             List<long> traceIds = new List<long>();
             if (taskKeySetsToIntersect.Count == 0)
             {
-                traceIds = traceIdToTimestamp.Result.Keys.ToList();
+                traceIds = (await traceIdToTimestamp).Keys.ToList();
             }
             else
             {
@@ -196,7 +196,12 @@ namespace Zipkin.Storage.Cassandra
             {
                 key += ":";
             }
-            return System.Text.Encoding.UTF8.GetBytes(key).Concat(value).ToArray();
+            var buffer = System.Text.Encoding.UTF8.GetBytes(key);
+            if (value != null)
+            {
+                buffer = buffer.Concat(value).ToArray();
+            }
+            return buffer;
         }
 
     }

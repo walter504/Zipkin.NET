@@ -21,8 +21,8 @@ namespace Zipkin.Storage.Cassandra
             public string password;
             public int maxTraceCols = 100000;
             public int bucketCount = 10;
-            public int spanTtl = TimeSpan.FromDays(7).Seconds;
-            public int indexTtl = TimeSpan.FromDays(3).Seconds;
+            public int spanTtl = (int)TimeSpan.FromDays(7).TotalSeconds;
+            public int indexTtl = (int)TimeSpan.FromDays(3).TotalSeconds;
             public SessionFactory sessionFactory = new SessionFactory.Default();
 
             /** Override to control how sessions are created. */
@@ -167,7 +167,23 @@ namespace Zipkin.Storage.Cassandra
                 return new CassandraDependencyStore(lazyRepository);
             }
         }
-        
 
+        /// <summary>
+        /// Truncates all the column families, or throws on any failure.
+        /// </summary>
+        public void Clear()
+        {
+            Parallel.ForEach(new List<string> {
+                "traces",
+                "dependencies",
+                "service_names",
+                "span_names",
+                "service_name_index",
+                "service_span_name_index",
+                "annotations_index",
+                "span_duration_index" },
+                (table) => session.Value.Execute(string.Format("TRUNCATE {0}", table))
+            );
+        }
     }
 }

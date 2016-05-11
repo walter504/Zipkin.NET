@@ -18,7 +18,7 @@ namespace Zipkin.Storage.Cassandra
 
         private static readonly Random RAND = new Random();
 
-        private static readonly List<int> ALL_BUCKETS = (new int[BUCKETS]).Select(i => i).ToList();
+        private static readonly int[] ALL_BUCKETS = (new int[BUCKETS]).Select((it, idx) => idx).ToArray();
 
         private static readonly long WRITTEN_NAMES_TTL = 60 * 60 * 1000;
 
@@ -34,7 +34,7 @@ namespace Zipkin.Storage.Cassandra
         private readonly PreparedStatement insertServiceName;
         private readonly PreparedStatement selectSpanNames;
         private readonly PreparedStatement insertSpanName;
-        private readonly PreparedStatement selectTraceIdsByServiceName;
+        private readonly PreparedStatement selectTraceIdsByServiceNames;
         private readonly PreparedStatement insertTraceIdByServiceName;
         private readonly PreparedStatement selectTraceIdsBySpanName;
         private readonly PreparedStatement insertTraceIdBySpanName;
@@ -45,44 +45,49 @@ namespace Zipkin.Storage.Cassandra
         private readonly Dictionary<string, string> metadata;
         private readonly Func<RowSet, Dictionary<long, long>> traceIdToTimestamp;
 
-        private const string selectTracesQuery = "SELECT trace_id, span FROM traces WHERE trace_id IN :trace_id LIMIT :limit;";
-        private const string insertSpanQuery = "INSERT INTO traces(trace_id, ts, span_name, span) VALUES(:trace_id, :ts, :span_name, :span) USING TTL :ttl;";
+        private const string selectTracesQuery = "SELECT trace_id, span FROM traces WHERE trace_id IN :trace_id LIMIT :limit_;";
+        private const string insertSpanQuery = "INSERT INTO traces(trace_id, ts, span_name, span) VALUES(:trace_id, :ts, :span_name, :span) USING TTL :ttl_;";
         private const string selectDependenciesQuery = "SELECT dependencies FROM dependencies WHERE day IN :days;";
         private const string insertDependenciesQuery = "INSERT INTO dependencies(day, dependencies) VALUES(:day, :dependencies);";
         private const string selectServiceNamesQuery = "SELECT service_name FROM service_names;";
-        private const string insertServiceNameQuery = "INSERT INTO service_names(service_name) VALUES(:service_name) USING TTL :ttl;";
-        private const string selectSpanNamesQuery = "SELECT span_name FROM span_names WHERE service_name = :service_name AND bucket = :bucket LIMIT :limit;";
-        private const string insertSpanNameQuery = "INSERT INTO span_names(service_name, bucket, span_name) VALUES(:service_name, :bucket, :span_name) USING TTL :ttl;";
-        private const string selectTraceIdsByServiceNameQuery = "SELECT ts, trace_id FROM service_name_index"
-                + " WHERE service_name = :service_name AND bucket in :bucket"
+        private const string insertServiceNameQuery = "INSERT INTO service_names(service_name) VALUES(:service_name) USING TTL :ttl_;";
+        private const string selectSpanNamesQuery = "SELECT span_name FROM span_names WHERE service_name = :service_name AND bucket = :bucket LIMIT :limit_;";
+        private const string insertSpanNameQuery = "INSERT INTO span_names(service_name, bucket, span_name) VALUES(:service_name, :bucket, :span_name) USING TTL :ttl_;";
+        private const string selectTraceIdsByServiceNamesQuery = "SELECT ts, trace_id FROM service_name_index"
+                + " WHERE service_name IN :service_name AND bucket IN :bucket"
                 + " AND ts >= :start_ts AND ts <= :end_ts"
-                + " LIMIT :limit ORDER BY ts DESC;";
+                + " ORDER BY ts DESC LIMIT :limit_;";
         private const string insertTraceIdByServiceNameQuery = "INSERT INTO service_name_index(service_name, bucket, ts, trace_id)"
-                + " VALUES(:service_name, :bucket, :ts, :trace_id) USING TTL :ttl;";
+                + " VALUES(:service_name, :bucket, :ts, :trace_id) USING TTL :ttl_;";
         private const string selectTraceIdsBySpanNameQuery = "SELECT ts, trace_id FROM service_span_name_index"
-                + " WHERE service_span_name = :service_span_name AND bucket = :bucket"
+                + " WHERE service_span_name = :service_span_name"
                 + " AND ts >= :start_ts AND ts <= :end_ts"
-                + " LIMIT :limit ORDER BY ts DESC;";
+                + " ORDER BY ts DESC LIMIT :limit_;";
         private const string insertTraceIdBySpanNameQuery = "INSERT INTO service_span_name_index(service_span_name, ts, trace_id)"
-                + " VALUES(:service_span_name, :ts, :trace_id) USING TTL :ttl;";
+                + " VALUES(:service_span_name, :ts, :trace_id) USING TTL :ttl_;";
         private const string selectTraceIdsByAnnotationsQuery = "SELECT ts, trace_id FROM annotations_index"
-                + " WHERE annotation = :annotation AND bucket in :bucket"
+                + " WHERE annotation = :annotation AND bucket IN :bucket"
                 + " AND ts >= :start_ts AND ts <= :end_ts"
-                + " LIMIT :limit ORDER BY ts DESC;";
+                + " ORDER BY ts DESC LIMIT :limit_;";
         private const string insertTraceIdByAnnotationQuery = "INSERT INTO annotations_index(annotation, bucket, ts, trace_id)"
-                + " VALUES(:annotation, :bucket, :ts, :trace_id) USING TTL :ttl;";
+                + " VALUES(:annotation, :bucket, :ts, :trace_id) USING TTL :ttl_;";
         private const string selectTraceIdsBySpanDurationQuery = "SELECT duration, ts, trace_id FROM span_duration_index"
                 + " WHERE service_name = :service_name  AND span_name = :span_name AND bucket = :bucket"
                 + " AND duration >= :min_duration AND duration <= :max_duration"
                 + " ORDER BY duration;";
         private const string insertTraceIdBySpanDurationQuery = "INSERT INTO span_duration_index(service_name, span_name, bucket, duration, ts, trace_id)"
-                + " VALUES(:service_name, :span_name, :bucket, :duration, :ts, :trace_id) USING TTL :ttl;";
+                + " VALUES(:service_name, :span_name, :bucket, :duration, :ts, :trace_id) USING TTL :ttl_;";
 
         private readonly ThreadLocal<ISet<string>> writtenNames = new ThreadLocalSet();
 
         class ThreadLocalSet : ThreadLocal<ISet<string>>
         {
             private long cacheInterval = ToCacheInterval(DateTime.Now.Ticks / 10000);
+
+            public ThreadLocalSet()
+                : base(() => new HashSet<string>())
+            {
+            }
 
             public ISet<string> Value
             {
@@ -121,7 +126,7 @@ namespace Zipkin.Storage.Cassandra
             insertServiceName = session.Prepare(insertServiceNameQuery);
             selectSpanNames = session.Prepare(selectSpanNamesQuery);
             insertSpanName = session.Prepare(insertSpanNameQuery);
-            selectTraceIdsByServiceName = session.Prepare(selectTraceIdsByServiceNameQuery);
+            selectTraceIdsByServiceNames = session.Prepare(selectTraceIdsByServiceNamesQuery);
             insertTraceIdByServiceName = session.Prepare(insertTraceIdByServiceNameQuery);
             selectTraceIdsBySpanName = session.Prepare(selectTraceIdsBySpanNameQuery);
             insertTraceIdBySpanName = session.Prepare(insertTraceIdBySpanNameQuery);
@@ -135,13 +140,14 @@ namespace Zipkin.Storage.Cassandra
                 var traceIdsToTimestamps = new Dictionary<long, long>();
                 foreach (var row in input.GetRows())
                 {
-                    traceIdsToTimestamps.Add(row.GetValue<long>("trace_id"), Util.ToUnixTimeMilliseconds(row.GetValue<DateTimeOffset>("ts").DateTime));
+                    traceIdsToTimestamps[row.GetValue<long>("trace_id")] = 
+                        Util.ToUnixTimeMilliseconds(row.GetValue<DateTimeOffset>("ts").DateTime);
                 }
                 return traceIdsToTimestamps;
             });
         }
 
-        public Task StoreSpan(long traceId, long timestamp, string spanName, byte[] span, int ttl)
+        public async Task StoreSpan(long traceId, long timestamp, string spanName, byte[] span, int ttl)
         {
             try
             {
@@ -158,7 +164,7 @@ namespace Zipkin.Storage.Cassandra
                     ts = timestamp,
                     span_name = spanName,
                     span = span,
-                    ttl = ttl
+                    ttl_ = ttl
                 });
 
                 if (log.IsDebugEnabled)
@@ -166,7 +172,11 @@ namespace Zipkin.Storage.Cassandra
                     log.Debug(DebugInsertSpan(traceId, timestamp, spanName, span, ttl));
                 }
 
-                return session.ExecuteAsync(bound);
+                var result = await session.ExecuteAsync(bound);
+                foreach(var row in result.GetRows())
+                {
+                    var t = row.GetHashCode();
+                }
             }
             catch (Exception ex)
             {
@@ -182,7 +192,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":ts", timestamp.ToString())
                 .Replace(":span_name", spanName)
                 .Replace(":span", Convert.ToBase64String(span))
-                .Replace(":ttl_", ttl.ToString());
+                .Replace(":ttl__", ttl.ToString());
         }
 
         /// <summary>
@@ -191,7 +201,7 @@ namespace Zipkin.Storage.Cassandra
         /// in that span. First event should be first in the spans list.
         /// </summary>
         /// <param name="traceIds"></param>
-        /// <param name="limit"></param>
+        /// <param name="limit_"></param>
         /// <returns>
         /// The return list will contain only spans that have been found, thus
         /// the return list may not match the provided list of ids.
@@ -205,8 +215,7 @@ namespace Zipkin.Storage.Cassandra
 
             try
             {
-                BoundStatement bound = selectTraces.Bind(new { trace_id = traceIds, limit = limit });
-
+                BoundStatement bound = selectTraces.Bind(new { trace_id = traceIds, limit_ = limit });
                 bound.SetPageSize(int.MaxValue);
 
                 if (log.IsDebugEnabled)
@@ -238,7 +247,7 @@ namespace Zipkin.Storage.Cassandra
         {
             return selectTracesQuery
                 .Replace(":trace_id", traceIds.ToString())
-                .Replace(":limit", limit.ToString());
+                .Replace(":limit_", limit.ToString());
         }
 
         public Task StoreDependencies(long epochDayMillis, byte[] dependencies)
@@ -281,10 +290,12 @@ namespace Zipkin.Storage.Cassandra
             try
             {
                 BoundStatement bound = selectDependencies.Bind(new { days = days });
+
                 if (log.IsDebugEnabled)
                 {
                     log.Debug(DebugSelectDependencies(days));
                 }
+
                 var result = await session.ExecuteAsync(bound);
                 var dependencies = new List<DependencyLink>();
                 foreach (var row in result.GetRows())
@@ -311,7 +322,7 @@ namespace Zipkin.Storage.Cassandra
             {
                 try
                 {
-                    BoundStatement bound = insertServiceName.Bind(new { service_name = serviceName, ttl = ttl });
+                    BoundStatement bound = insertServiceName.Bind(new { service_name = serviceName, ttl_ = ttl });
 
                     if (log.IsDebugEnabled)
                     {
@@ -337,7 +348,7 @@ namespace Zipkin.Storage.Cassandra
         {
             return insertServiceNameQuery
                 .Replace(":service_name", serviceName)
-                .Replace(":ttl", ttl.ToString());
+                .Replace(":ttl_", ttl.ToString());
         }
 
         public async Task<IEnumerable<string>> GetServiceNames()
@@ -345,6 +356,7 @@ namespace Zipkin.Storage.Cassandra
             try
             {
                 BoundStatement bound = selectServiceNames.Bind();
+
                 if (log.IsDebugEnabled)
                 {
                     log.Debug(selectServiceNamesQuery);
@@ -376,7 +388,7 @@ namespace Zipkin.Storage.Cassandra
                         service_name = serviceName,
                         bucket = 0,
                         span_name = spanName,
-                        ttl = ttl
+                        ttl_ = ttl
                     });
 
                     if (log.IsDebugEnabled)
@@ -403,7 +415,7 @@ namespace Zipkin.Storage.Cassandra
             return insertSpanNameQuery
                 .Replace(":service_name", serviceName)
                 .Replace(":span_name", spanName)
-                .Replace(":ttl", ttl.ToString());
+                .Replace(":ttl_", ttl.ToString());
         }
 
         public async Task<IEnumerable<string>> GetSpanNames(string serviceName)
@@ -413,7 +425,8 @@ namespace Zipkin.Storage.Cassandra
             {
                 if (!string.IsNullOrEmpty(serviceName))
                 {
-                    BoundStatement bound = selectSpanNames.Bind(new { service_name = serviceName, bucket = 0, limit = 1000 });
+                    BoundStatement bound = selectSpanNames.Bind(new { service_name = serviceName, bucket = 0, limit_ = 1000 });
+
                     if (log.IsDebugEnabled)
                     {
                         log.Debug(DebugSelectSpanNames(serviceName));
@@ -454,7 +467,7 @@ namespace Zipkin.Storage.Cassandra
                     bucket = RAND.Next(BUCKETS),
                     ts = Util.FromUnixTimeMicroseconds(timestamp),
                     trace_id = traceId,
-                    ttl = ttl
+                    ttl_ = ttl
                 });
                 if (log.IsDebugEnabled)
                 {
@@ -476,23 +489,25 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":service_name", serviceName)
                 .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                 .Replace(":trace_id", traceId.ToString())
-                .Replace(":ttl", ttl.ToString());
+                .Replace(":ttl_", ttl.ToString());
         }
 
-        public async Task<Dictionary<long, long>> GetTraceIdsByServiceName(IEnumerable<string> serviceNames, long endTs, long lookback, int limit)
+        public async Task<Dictionary<long, long>> GetTraceIdsByServiceNames(IEnumerable<string> serviceNames, long endTs, long lookback, int limit)
         {
             long startTs = endTs - lookback;
 
             try
             {
-                BoundStatement bound = selectTraceIdsByServiceName.Bind(new
+                BoundStatement bound = selectTraceIdsByServiceNames.Bind(new
                 {
                     service_name = serviceNames,
                     bucket = ALL_BUCKETS,
                     start_ts = Util.FromUnixTimeMicroseconds(startTs),
                     end_ts = Util.FromUnixTimeMicroseconds(endTs),
-                    limit = limit
+                    limit_ = limit
                 });
+                bound.SetPageSize(int.MaxValue);
+
                 if (log.IsDebugEnabled)
                 {
                     log.Debug(DebugSelectTraceIdsByServiceName(serviceNames, startTs, endTs, limit));
@@ -510,11 +525,11 @@ namespace Zipkin.Storage.Cassandra
 
         private string DebugSelectTraceIdsByServiceName(IEnumerable<string> serviceNames, long startTs, long endTs, int limit)
         {
-            return selectTraceIdsByServiceNameQuery
+            return selectTraceIdsByServiceNamesQuery
                 .Replace(":service_name", serviceNames.ToString())
                 .Replace(":start_ts", Util.FromUnixTimeMicroseconds(startTs).ToString())
                 .Replace(":end_ts", Util.FromUnixTimeMicroseconds(endTs).ToString())
-                .Replace(":limit", limit.ToString());
+                .Replace(":limit_", limit.ToString());
         }
 
         public Task StoreTraceIdBySpanName(string serviceName, string spanName, long timestamp, long traceId, int ttl)
@@ -528,7 +543,7 @@ namespace Zipkin.Storage.Cassandra
                     service_span_name = serviceSpanName,
                     ts = Util.FromUnixTimeMicroseconds(timestamp),
                     traceId = traceId,
-                    ttl = ttl
+                    ttl_ = ttl
                 });
 
                 if (log.IsDebugEnabled)
@@ -550,7 +565,7 @@ namespace Zipkin.Storage.Cassandra
                     .Replace(":service_span_name", serviceSpanName)
                     .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                     .Replace(":trace_id", traceId.ToString())
-                    .Replace(":ttl_", ttl.ToString());
+                    .Replace(":ttl__", ttl.ToString());
         }
 
         public async Task<Dictionary<long, long>> GetTraceIdsBySpanName(string serviceName, string spanName, long endTs, long lookback, int limit)
@@ -564,8 +579,9 @@ namespace Zipkin.Storage.Cassandra
                     service_span_name = serviceSpanName,
                     start_ts = Util.FromUnixTimeMicroseconds(startTs),
                     end_ts = Util.FromUnixTimeMicroseconds(endTs),
-                    limit = limit
+                    limit_ = limit
                 });
+
                 if (log.IsDebugEnabled)
                 {
                     log.Debug(DebugSelectTraceIdsBySpanName(serviceSpanName, startTs, endTs, limit));
@@ -583,11 +599,11 @@ namespace Zipkin.Storage.Cassandra
 
         private string DebugSelectTraceIdsBySpanName(string serviceSpanName, long startTs, long endTs, int limit)
         {
-            return selectTraceIdsByServiceNameQuery
+            return selectTraceIdsBySpanNameQuery
                 .Replace(":service_span_name", serviceSpanName)
                 .Replace(":start_ts", Util.FromUnixTimeMicroseconds(startTs).ToString())
                 .Replace(":end_ts", Util.FromUnixTimeMicroseconds(endTs).ToString())
-                .Replace(":limit", limit.ToString());
+                .Replace(":limit_", limit.ToString());
         }
 
         public Task StoreTraceIdByAnnotation(byte[] annotationKey, long timestamp, long traceId, int ttl)
@@ -600,7 +616,7 @@ namespace Zipkin.Storage.Cassandra
                     bucket = RAND.Next(BUCKETS),
                     ts = Util.FromUnixTimeMicroseconds(timestamp),
                     trace_id = traceId,
-                    ttl = ttl
+                    ttl_ = ttl
                 });
                 if (log.IsDebugEnabled)
                 {
@@ -621,7 +637,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":annotation", Convert.ToBase64String(annotationKey))
                 .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                 .Replace(":trace_id", traceId.ToString())
-                .Replace(":ttl_", ttl.ToString());
+                .Replace(":ttl__", ttl.ToString());
         }
 
         public async Task<Dictionary<long, long>> GetTraceIdsByAnnotation(byte[] annotationKey, long endTs, long lookback, int limit)
@@ -635,8 +651,9 @@ namespace Zipkin.Storage.Cassandra
                     bucket = ALL_BUCKETS,
                     start_ts = Util.FromUnixTimeMicroseconds(startTs),
                     end_ts = Util.FromUnixTimeMicroseconds(endTs),
-                    limit = limit
+                    limit_ = limit
                 });
+                bound.SetPageSize(int.MaxValue);
 
                 if (log.IsDebugEnabled)
                 {
@@ -658,7 +675,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":annotation", Convert.ToBase64String(annotationKey))
                 .Replace(":start_ts", Util.FromUnixTimeMicroseconds(startTs).ToString())
                 .Replace(":end_ts", Util.FromUnixTimeMicroseconds(endTs).ToString())
-                .Replace(":limit", limit.ToString());
+                .Replace(":limit_", limit.ToString());
         }
 
         public Task StoreTraceIdByDuration(string serviceName, string spanName, long timestamp, long duration, long traceId, int ttl)
@@ -672,7 +689,7 @@ namespace Zipkin.Storage.Cassandra
                     bucket = DurationIndexBucket(timestamp),
                     ts = Util.FromUnixTimeMicroseconds(timestamp),
                     trace_id = traceId,
-                    ttl = ttl
+                    ttl_ = ttl
                 });
 
                 if (log.IsDebugEnabled)
@@ -697,7 +714,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                 .Replace(":duration", duration.ToString())
                 .Replace(":trace_id", traceId.ToString())
-                .Replace(":ttl_", ttl.ToString());
+                .Replace(":ttl__", ttl.ToString());
         }
 
         /** Returns a map of trace id to timestamp (in microseconds) */
@@ -754,10 +771,10 @@ namespace Zipkin.Storage.Cassandra
                     max_duration = maxDuration,
                     min_duration = minDuration
                 });
-                // optimistically setting fetch size to 'limit' here. Since we are likely to filter some results
+                // optimistically setting fetch size to 'limit_' here. Since we are likely to filter some results
                 // because their timestamps are out of range, we may need to fetch again.
                 // TODO figure out better strategy
-                //bound.setFetchSize(limit);
+                bound.SetPageSize(limit);
 
                 if (log.IsDebugEnabled)
                 {
@@ -791,7 +808,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":bucket", bucket.ToString())
                 .Replace(":max_duration", maxDuration.ToString())
                 .Replace(":min_duration", minDuration.ToString())
-                .Replace(":limit", limit.ToString());
+                .Replace(":limit_", limit.ToString());
         }
 
 

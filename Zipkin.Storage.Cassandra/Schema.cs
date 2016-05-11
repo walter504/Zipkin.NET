@@ -9,7 +9,7 @@ namespace Zipkin.Storage.Cassandra
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(Schema));
 
-        private static readonly string SCHEMA = "cassandra-schema-cql3.txt";
+        private static readonly string SCHEMA = "database.cassandra-schema-cql3.txt";
         public static readonly string KEYSPACE = "zipkin";
         
         public static Dictionary<string, string> ReadMetadata(ISession session)
@@ -43,15 +43,19 @@ namespace Zipkin.Storage.Cassandra
         public static void EnsureExists(string keyspace, ISession session)
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            System.IO.Stream stream = assembly.GetManifestResourceStream(assembly.FullName + "." + SCHEMA);
+            string name = assembly.GetName().Name;
+            System.IO.Stream stream = assembly.GetManifestResourceStream(name + "." + SCHEMA);
             try
             {
-                using (var reader = new System.IO.StreamReader(stream))
+                using (var reader = new System.IO.StreamReader(stream, System.Text.Encoding.UTF8))
                 {
                     foreach (var cmd in reader.ReadToEnd().Split(';'))
                     {
-                        var cql = cmd.Trim().Replace(" " + KEYSPACE, " " + keyspace);
-                        session.Execute(cql);
+                        var cql = cmd.Trim();
+                        if (!string.IsNullOrEmpty(cql))
+                        {
+                            session.Execute(cql.Replace(" " + KEYSPACE, " " + keyspace));
+                        }
                     }
                 }
             }

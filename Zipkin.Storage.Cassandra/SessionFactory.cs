@@ -81,7 +81,7 @@ namespace Zipkin.Storage.Cassandra
                 foreach (var contactPoint in cassandra.contactPoints.Split(','))
                 {
                     HostAndPort parsed = HostAndPort.FromString(contactPoint);
-                    result.Add(new IPEndPoint(parsed.HostLong, parsed.GetPortOrDefault(9042)));
+                    result.Add(new IPEndPoint(parsed.IPAddress, parsed.GetPortOrDefault(9042)));
                 }
                 return result;
             }

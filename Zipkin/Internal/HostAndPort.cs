@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,6 +28,14 @@ namespace Zipkin.Internal
             }
         }
 
+        public IPAddress IPAddress
+        {
+            get
+            {
+                return IPAddress.Parse(host);
+            }
+        }
+
         public int Port
         {
             get
@@ -48,7 +57,8 @@ namespace Zipkin.Internal
         {
             var segs = dest.Split(':');
             var hostAndPort = new HostAndPort();
-            hostAndPort.host = segs[0];
+            hostAndPort.host = segs[0].ToLower() == "localhost" ? "127.0.0.1" : segs[0];
+            //hostAndPort.host = segs[0];
             if (segs.Length >= 2)
             {
                 hostAndPort.port = int.Parse(segs[0]);
