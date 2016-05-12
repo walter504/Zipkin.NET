@@ -13,25 +13,41 @@ namespace Zipkin.Adjuster
             return newSpans;
         }
 
-        public static Span Apply(Span s)
+        public static Span Apply(Span span)
         {
-            if ((!s.timestamp.HasValue || !s.duration.HasValue) && 0 != s.annotations.Count)
+            // Don't overwrite authoritatively set timestamp and duration!
+            if (span.timestamp != null && span.duration != null)
             {
-                long? ts = s.timestamp;
-                long? dur = s.duration;
-                ts = ts ?? s.annotations[0].timestamp;
-                if (!dur.HasValue)
-                {
-                    long lastTs = s.annotations[s.annotations.Count - 1].timestamp;
-                    if (ts != lastTs)
-                    {
-                        dur = lastTs - ts;
-                    }
-                }
-                s.timestamp = ts;
-                s.duration = dur;
+              return span;
             }
-            return s;
+
+            // Only calculate span.timestamp and duration on complete spans. This avoids
+            // persisting an inaccurate timestamp due to a late arriving annotation.
+            if (span.annotations.Count < 2)
+            {
+              return span;
+            }
+
+            // For spans that core client annotations, the distance between "cs" and "cr" should be the
+            // authoritative duration. We are special-casing this to avoid setting incorrect duration
+            // when there's skew between the client and the server.
+            long first = span.annotations.First().timestamp;
+            long last = span.annotations.Last().timestamp;
+            foreach (var annotation in span.annotations)
+            {
+              if (annotation.value == Constants.ClientSend)
+              {
+                first = annotation.timestamp;
+              }
+              else if (annotation.value == Constants.ClientRecv)
+              {
+                last = annotation.timestamp;
+              }
+            }
+            long ts = span.timestamp ?? first;
+            long? dur = span.duration.HasValue ? span.duration : (last == first ? null : new Nullable<long>(last - first));
+            return new Span(span.traceId, span.name, span.id, span.parentId, 
+                ts, dur, span.annotations, span.binaryAnnotations, span.debug);
         }
     }
 }

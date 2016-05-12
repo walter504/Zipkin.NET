@@ -163,11 +163,20 @@ namespace Zipkin.Storage.Cassandra
             return result.Select(ss => MergeById.Apply(ss)).Select(ss => CorrectForClockSkew.Apply(ss));
         }
 
-        public async Task<IEnumerable<IEnumerable<Span>>> GetTracesByIds(IEnumerable<long> traceIds)
+        public async Task<IEnumerable<Span>> GetTrace(long traceId)
         {
-            var result = await Repo.GetSpansByTraceIds(traceIds.ToArray(), maxTraceCols);
-            return result.Select(ss => MergeById.Apply(ss)).Select(ss => CorrectForClockSkew.Apply(ss));
+            var trace = await GetRawTrace(traceId);
+            return trace == null || trace.Count() == 0
+                ? null
+                : CorrectForClockSkew.Apply(MergeById.Apply(trace));
         }
+
+        public async Task<IEnumerable<Span>> GetRawTrace(long traceId)
+        {
+            var traces = await Repo.GetSpansByTraceIds(new long[] {traceId}, maxTraceCols);
+            return traces.Count == 0 ? null : traces[0];
+        }
+
 
         public Task<IEnumerable<string>> GetServiceNames()
         {

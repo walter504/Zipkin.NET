@@ -6,6 +6,12 @@ namespace Zipkin.Adjuster
 {
     public class MergeById
     {
+        /// <summary>
+        /// Merge all the spans with the same id. This is used by span stores who store
+        /// partial spans and need them collated at query time.
+        /// </summary>
+        /// <param name="spans"></param>
+        /// <returns></returns>
         public static List<Span> Apply(IEnumerable<Span> spans)
         {
             var result = new List<Span>();

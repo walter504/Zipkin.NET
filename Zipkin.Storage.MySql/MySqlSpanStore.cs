@@ -106,6 +106,19 @@ namespace Zipkin.Storage.MySql
             }
         }
 
+        public async Task<IEnumerable<Span>> GetTrace(long traceId)
+        {
+            var traces = await GetTraces(null, new long[] { traceId });
+            return 0 == traces.Count()
+                ? null
+                : traces.First();
+        }
+
+        public async Task<IEnumerable<Span>> GetRawTrace(long traceId)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IEnumerable<IEnumerable<Span>>> GetTracesByIds(IEnumerable<long> traceIds)
         {
             return 0 == traceIds.Count() 

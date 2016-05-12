@@ -6,58 +6,57 @@ namespace Zipkin.Storage
 {
     public interface ISpanStore
     {
-        /**
-         * Sinks the given spans, ignoring duplicate annotations.
-         */
+        /// <summary>
+        /// Sinks the given spans, ignoring duplicate annotations.
+        /// </summary>
+        /// <param name="spans"></param>
+        /// <returns></returns>
         Task Accept(IEnumerable<Span> spans);
 
-        /**
-         * Get the available trace information from the storage system. Spans in trace are sorted by the
-         * first annotation timestamp in that span. First event should be first in the spans list.
-         *
-         * <p/> Results are sorted in order of the first span's timestamp, and contain up to {@link
-         * QueryRequest#limit} elements.
-         */
+        /// <summary>
+        /// Get the available trace information from the storage system. Spans in trace are sorted by the
+        /// first annotation timestamp in that span. First event should be first in the spans list.
+        ///
+        /// <p/> Results are sorted in order of the first span's timestamp, and contain up to {@link
+        /// QueryRequest#limit} elements.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         Task<IEnumerable<IEnumerable<Span>>> GetTraces(QueryRequest request);
 
-        /**
-         * Get the available trace information from the storage system. Spans in trace are sorted by the
-         * first annotation timestamp in that span. First event should be first in the spans list.
-         *
-         * <p/> Results are sorted in order of the first span's timestamp, and contain less elements than
-         * trace IDs when corresponding traces aren't available.
-         */
-        Task<IEnumerable<IEnumerable<Span>>> GetTracesByIds(IEnumerable<long> traceIds);
+        /// <summary>
+        /// Get the available trace information from the storage system. Spans in trace are sorted by the
+        /// first annotation timestamp in that span. First event should be first in the spans list.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>a list of spans with the same {@link Span#traceId}, or null if not present.</returns>
+        Task<IEnumerable<Span>> GetTrace(long id);
 
-        /**
-         * Get all the {@link Endpoint#serviceName service names}.
-         *
-         * <p/> Results are sorted lexicographically
-         */
+        /// <summary>
+        /// Retrieves spans that share a trace id, as returned from backend data store queries, with no
+        /// ordering expectation.
+        ///
+        /// <p>This is different, but related to {@link #getTrace}. {@link #getTrace} cleans data by
+        /// merging spans, adding timestamps and performing clock skew adjustment. This feature is for
+        /// debugging zipkin logic or zipkin instrumentation.
+        /// 
+        /// </summary>
+        /// <param name="traceId"></param>
+        /// <returns>a list of spans with the same {@link Span#traceId}, or null if not present.</returns>
+        Task<IEnumerable<Span>> GetRawTrace(long traceId);
+
+        /// <summary>
+        /// Get all the {@link Endpoint#serviceName service names}.
+        /// <p/> Results are sorted lexicographically
+        /// </summary>
+        /// <returns></returns>
         Task<IEnumerable<string>> GetServiceNames();
 
-        /**
-         * Get all the span names for a particular {@link Endpoint#serviceName}.
-         *
-         * <p/> Results are sorted lexicographically
-         */
+        /// <summary>
+        /// Get all the span names for a particular {@link Endpoint#serviceName}.
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <returns>Results are sorted lexicographically</returns>
         Task<IEnumerable<string>> GetSpanNames(string serviceName);
-
-        /**
-         * Returns dependency links derived from spans.
-         *
-         * <p/>Implementations may bucket aggregated data, for example daily. When this is the case, endTs
-         * may be floored to align with that bucket, for example midnight if daily. lookback applies to
-         * the original endTs, even when bucketed. Using the daily example, if endTs was 11pm and lookback
-         * was 25 hours, the implementation would query against 2 buckets.
-         *
-         * @param endTs only return links from spans where {@link Span#timestamp} are at or before this
-         *              time in epoch milliseconds.
-         * @param lookback only return links from spans where {@link Span#timestamp} are at or after
-         *                 (endTs - lookback) in milliseconds. Defaults to endTs.
-         * @return dependency links in an interval contained by (endTs - lookback) or empty if none are
-         *         found
-         */
-        Task<IEnumerable<DependencyLink>> GetDependencies(long endTs, long? lookback);
     }
 }

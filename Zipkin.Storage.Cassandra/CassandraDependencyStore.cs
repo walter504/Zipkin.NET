@@ -23,13 +23,19 @@ namespace Zipkin.Storage.Cassandra
             this.lazyRepository = lazyRepository;
         }
 
-        public Task<IEnumerable<DependencyLink>> GetDependencies(long endTs, long? lookback)
+        public async Task<IEnumerable<DependencyLink>> GetDependencies(long endTs, long? lookback)
         {
-            return Repo.GetDependencies(endTs, lookback);
+            var links = (await Repo.GetDependencies(endTs, lookback)).ToList();
+            return links.GroupBy(dl => new KeyValuePair<string, string>(dl.parent, dl.child)).Select(g => new DependencyLink()
+            {
+                parent = g.Key.Key,
+                child = g.Key.Value,
+                callCount = g.ToList().Sum(dl => dl.callCount)
+            });
         }
-        public Task StoreDependencies(Dependencies dependencies)
+        public virtual Task StoreDependencies(long epochDayMillis, IEnumerable<DependencyLink> links)
         {
-            return Task.FromResult(0);
+            return Repo.StoreDependencies(epochDayMillis, Codec.THRIFT.WriteDependencyLinks(links.ToList()));
         }
     }
 }

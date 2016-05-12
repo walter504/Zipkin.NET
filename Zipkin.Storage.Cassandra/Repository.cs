@@ -252,7 +252,7 @@ namespace Zipkin.Storage.Cassandra
 
         public Task StoreDependencies(long epochDayMillis, byte[] dependencies)
         {
-            DateTimeOffset startFlooredToDay = Util.FromUnixTimeMilliseconds(epochDayMillis);
+            DateTimeOffset startFlooredToDay = Util.FromUnixTimeMilliseconds(epochDayMillis).Date;
             try
             {
                 BoundStatement bound = insertDependencies.Bind(new

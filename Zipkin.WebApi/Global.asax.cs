@@ -9,10 +9,11 @@ using System.Web.SessionState;
 using Autofac;
 using Autofac.Integration.WebApi;
 using Common.Logging;
+using Microsoft.Extensions.Configuration;
 using Zipkin;
-using Zipkin.Storage.MySql;
 using Zipkin.Storage;
 using Zipkin.Storage.Cassandra;
+using Zipkin.Storage.MySql;
 
 namespace Zipkin.WebApi
 {
@@ -51,8 +52,11 @@ namespace Zipkin.WebApi
             builder.RegisterType<ZipkinSpanWriter>().SingleInstance();
             //builder.RegisterType<MySqlSpanStore>().As<ISpanStore>();
 
-            var storageBuilder = new CassandraStorage.Builder();
-            var storage = storageBuilder.Build();
+            var configurationBuilder = new ConfigurationBuilder();
+            configurationBuilder.AddJsonFile("configs/cassandra.json");
+            var cofiguration = configurationBuilder.Build();
+            var props = cofiguration.GetZipkinCassandraProperties();
+            var storage = props.ToBuilder().Build();
             builder.Register(c => storage.SpanStore).As<ISpanStore>().SingleInstance();
             builder.Register(c => storage.DependencyStore).As<IDependencyStore>().SingleInstance();
         }

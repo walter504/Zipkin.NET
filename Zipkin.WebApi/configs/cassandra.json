@@ -1,0 +1,8 @@
+﻿{
+    "cassandra": {
+        "keyspace": "zipkin",
+        "contactPoints": "localhost",
+        "maxConnections": 8,
+        "ensureSchema": true
+    }
+}

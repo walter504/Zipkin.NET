@@ -28,7 +28,7 @@ namespace Zipkin.Storage
         /// empty if none are found
         /// </returns>
         Task<IEnumerable<DependencyLink>> GetDependencies(long endTs, long? lookback);
-        Task StoreDependencies(Dependencies dependencies);
+        Task StoreDependencies(long epochDayMillis, IEnumerable<DependencyLink> links);
     }
 
     public class NullDependencyStore : IDependencyStore
@@ -37,7 +37,7 @@ namespace Zipkin.Storage
         {
             return Task.FromResult((new List<DependencyLink>()).AsEnumerable());
         }
-        public virtual Task StoreDependencies(Dependencies dependencies)
+        public virtual Task StoreDependencies(long epochDayMillis, IEnumerable<DependencyLink> links)
         {
             return Task.FromResult(0);
         }

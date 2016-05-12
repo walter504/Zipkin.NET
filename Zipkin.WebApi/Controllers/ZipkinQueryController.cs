@@ -156,12 +156,12 @@ namespace Zipkin.WebApi.Controllers
         [Route("trace/{id}")]
         public async Task<IHttpActionResult> GetTrace(long id)
         {
-            var traces = await spanStore.GetTracesByIds(new long[] { id });
-            if (traces.Count() == 0)
+            var trace = await spanStore.GetTrace(id);
+            if (trace == null)
             {
                 return NotFound();
             }
-            return Ok(traces.First().Select(s => new JsonSpan(s)));
+            return Ok(trace.Select(s => new JsonSpan(s)));
         }
     }
 }

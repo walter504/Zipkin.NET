@@ -64,7 +64,7 @@ namespace Zipkin.Storage.Cassandra
                 {
                     builder.WithCredentials(cassandra.username, cassandra.password);
                 }
-                //builder.WithRetryPolicy(ZipkinRetryPolicy.Instance);
+                builder.WithRetryPolicy(ZipkinRetryPolicy.Instance);
                 builder.WithLoadBalancingPolicy(new TokenAwarePolicy(
                     cassandra.localDc != null
                         ? new DCAwareRoundRobinPolicy(cassandra.localDc) as ILoadBalancingPolicy
