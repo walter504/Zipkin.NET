@@ -49,7 +49,7 @@ namespace Zipkin.TraceGen
                 var start = DateTime.Now.AddHours(-(rnd.Next(8) + 1));
                 var trace = new GenTrace();
                 //DoRpc(trace, start, rnd.Next(this.maxDepth), GetRandRpcName(), withEndpoint(ep => ep));
-                withEndpoint(ep => {
+                WithEndpoint(ep => {
                     DoRpc(trace, start, rnd.Next(this.maxDepth), GetRandRpcName(), ep);
                     return ep;
                 });
@@ -69,14 +69,15 @@ namespace Zipkin.TraceGen
             public void AddSpan(string name, long id, long? parentId, long timestamp,
                 long duration, List<Annotation> annos, List<BinaryAnnotation> binAnnos)
             {
-                Spans.Add(new Span(traceId, name, id, parentId, timestamp, duration, annos, binAnnos));
+                Spans.Add(Span.NewBuilder().TraceId(traceId).Name(name).Id(id).ParentId(parentId)
+                    .Timestamp(timestamp).Duration(duration).Annotations(annos).BinaryAnnotations(binAnnos).Build());
             }
         }
 
         private delegate T Act<T>(Endpoint endpoint);
 
         private List<string> upstreamServices = new List<string>();
-        private T withEndpoint<T>(Act<T> f)
+        private T WithEndpoint<T>(Act<T> f)
         {
             // attempt to get a service name without introducing a loop in the trace DAG
             var svcName = GetRandSvcName();
@@ -140,7 +141,7 @@ namespace Zipkin.TraceGen
                 // parallel calls to downstream services
                 var times = (new int[rnd.Next(depth) + 1]).Select(i =>
                 {
-                    return withEndpoint(nextEp =>
+                    return WithEndpoint(nextEp =>
                     {
                         var thisSpanId = GetRandLong();
                         var thisParentId = spanId;

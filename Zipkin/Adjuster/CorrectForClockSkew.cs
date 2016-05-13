@@ -47,30 +47,38 @@ namespace Zipkin.Adjuster
         }
 
         /** If any annotation has an IP with skew associated, adjust accordingly. */
-        private static Span AdjustTimestamps(Span span, ClockSkew clockSkew)
+        private static Span AdjustTimestamps(Span span, ClockSkew skew)
         {
             Annotation[] annotations = null;
-            var length = span.annotations.Count;
-            for (int i = 0; i < length; i++)
+            for (int i = 0, length = span.annotations.Count; i < length; i++)
             {
                 var a = span.annotations[i];
                 if (a.endpoint == null) continue;
-                if (clockSkew.endpoint.ipv4 == a.endpoint.ipv4)
+                if (skew.endpoint.ipv4 == a.endpoint.ipv4)
                 {
                     if (annotations == null)
                     {
                         annotations = span.annotations.ToArray();
                     }
-                    annotations[i] = new Annotation(a.timestamp - clockSkew.skew, a.value, a.endpoint);
+                    annotations[i] = new Annotation(a.timestamp - skew.skew, a.value, a.endpoint);
                 }
             }
-            if (annotations == null) return span;
-            // reset timestamp and duration as if there's skew, these will change.
-            long first = annotations[0].timestamp;
-            long last = annotations[length - 1].timestamp;
-            long duration = last - first;
-            return new Span(span.traceId, span.name, span.id, span.parentId, first,
-                duration, span.annotations, span.binaryAnnotations, span.debug);
+
+            if (annotations != null)
+            {
+                return span.ToBuilder().Timestamp(annotations[0].timestamp).Annotations(annotations).Build();
+            }
+            // Search for a local span on the skewed endpoint
+            for (int i = 0, length = span.binaryAnnotations.Count; i < length; i++)
+            {
+                BinaryAnnotation b = span.binaryAnnotations[i];
+                if (b.endpoint == null) continue;
+                if (b.key == Constants.LocalComponent && skew.endpoint.ipv4 == b.endpoint.ipv4)
+                {
+                    return span.ToBuilder().Timestamp(span.timestamp - skew.skew).Build();
+                }
+            }
+            return span;
         }
 
         private static ClockSkew GetClockSkew(Span span)

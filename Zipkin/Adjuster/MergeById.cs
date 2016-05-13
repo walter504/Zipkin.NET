@@ -25,7 +25,7 @@ namespace Zipkin.Adjuster
                 spanIdToSpans[span.id].Add(span);
             }
 
-            foreach (List<Span> spansToMerge in spanIdToSpans.Values)
+            foreach (var spansToMerge in spanIdToSpans.Values)
             {
                 if (spansToMerge.Count == 1)
                 {
@@ -33,12 +33,12 @@ namespace Zipkin.Adjuster
                 }
                 else
                 {
-                    //Span.Builder builder = new Span.Builder(spansToMerge.get(0));
+                    var builder = spansToMerge[0].ToBuilder();
                     for (int i = 1; i < spansToMerge.Count; i++)
                     {
-                        //builder.merge(spansToMerge.get(i));
+                        builder.Merge(spansToMerge[i]);
                     }
-                    //result.add(builder.build());
+                    result.Add(builder.Build());
                 }
             }
 

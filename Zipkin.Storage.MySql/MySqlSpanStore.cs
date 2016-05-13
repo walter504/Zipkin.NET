@@ -147,15 +147,15 @@ namespace Zipkin.Storage.MySql
                         new { traceIds = traceIds }))
                         .Select(s =>
                         {
-                            return new Span(
-                                s.trace_id,
-                                s.name,
-                                s.id,
-                                s.parent_id,
-                                s.start_ts,
-                                s.duration,
-                                debug: s.debug
-                            );
+                            return Span.NewBuilder()
+                                .TraceId(s.trace_id)
+                                .Name(s.name)
+                                .Id(s.id)
+                                .ParentId(s.parent_id)
+                                .Timestamp(s.start_ts)
+                                .Duration(s.duration)
+                                .Debug(s.debug)
+                                .Build();
                         }).GroupBy(s => s.traceId).ToDictionary(g => g.Key, g => g.ToList());
 
                     dbAnnotations = (await conn.QueryAsync<zipkin_annotations>("select * from zipkin_annotations where trace_id in @traceIds order by a_timestamp, a_key", 

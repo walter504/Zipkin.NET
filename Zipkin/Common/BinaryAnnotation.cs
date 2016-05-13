@@ -4,7 +4,7 @@ using Zipkin.Internal;
 
 namespace Zipkin
 {
-    public class BinaryAnnotation
+    public class BinaryAnnotation : IComparable<BinaryAnnotation>
     {
         /**
          * Name used to lookup spans, such as "http.uri" or "finagle.version".
@@ -74,6 +74,12 @@ namespace Zipkin
             h *= 1000003;
             h ^= (endpoint == null) ? 0 : endpoint.GetHashCode();
             return h;
+        }
+
+        public int CompareTo(BinaryAnnotation that)
+        {
+            if (this == that) return 0;
+            return key.CompareTo(that.key);
         }
     }
 }

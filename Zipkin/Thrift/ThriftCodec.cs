@@ -281,7 +281,7 @@ namespace Zipkin
 
             public Span Read(BufferReader bytes)
             {
-                Span span = new Span();
+                var builder = Span.NewBuilder();
                 Field field;
 
                 while (true)
@@ -291,47 +291,46 @@ namespace Zipkin
 
                     if (field.Equals(TRACE_ID))
                     {
-                        span.traceId = bytes.ReadInt64();
+                        builder.TraceId(bytes.ReadInt64());
                     }
                     else if (field.Equals(NAME))
                     {
-                        span.name = ReadUtf8(bytes);
+                        builder.Name(ReadUtf8(bytes));
                     }
                     else if (field.Equals(ID))
                     {
-                        span.id = bytes.ReadInt64();
+                        builder.Id(bytes.ReadInt64());
                     }
                     else if (field.Equals(PARENT_ID))
                     {
-                        span.parentId = bytes.ReadInt64();
+                        builder.ParentId(bytes.ReadInt64());
                     }
                     else if (field.Equals(ANNOTATIONS))
                     {
-                        span.annotations = ANNOTATIONS_ADAPTER.Read(bytes);
+                        builder.Annotations(ANNOTATIONS_ADAPTER.Read(bytes));
                     }
                     else if (field.Equals(BINARY_ANNOTATIONS))
                     {
-                        span.binaryAnnotations = BINARY_ANNOTATIONS_ADAPTER.Read(bytes);
+                        builder.BinaryAnnotations(BINARY_ANNOTATIONS_ADAPTER.Read(bytes));
                     }
                     else if (field.Equals(DEBUG))
                     {
-                        span.debug = bytes.ReadByte() == 1;
+                        builder.Debug(bytes.ReadByte() == 1);
                     }
                     else if (field.Equals(TIMESTAMP))
                     {
-                        span.timestamp = bytes.ReadInt64();
+                        builder.Timestamp(bytes.ReadInt64());
                     }
                     else if (field.Equals(DURATION))
                     {
-                        span.duration = bytes.ReadInt64();
+                        builder.Duration(bytes.ReadInt64());
                     }
                     else
                     {
                         Skip(bytes, field.Type);
                     }
                 }
-
-                return span;
+                return builder.Build();
             }
 
             public void Write(Span value, BufferWriter buffer)

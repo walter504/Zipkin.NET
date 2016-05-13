@@ -8,19 +8,224 @@ namespace Zipkin
 {
     public class Span : IComparable<Span>
     {
-        public long traceId { get; set; }
-        public string name { get; set; }
-        public long id { get; set; }
-        public long? parentId { get; set; }
-        public long? timestamp { get; set; }
-        public long? duration { get; set; }
-        public List<Annotation> annotations { get; set; }
-        public List<BinaryAnnotation> binaryAnnotations { get; set; }
-        public bool? debug { get; set; }
+        public long traceId { get; private set; }
+        public string name { get; private set; }
+        public long id { get; private set; }
+        public long? parentId { get; private set; }
+        public long? timestamp { get; private set; }
+        public long? duration { get; private set; }
+        public List<Annotation> annotations { get; private set; }
+        public List<BinaryAnnotation> binaryAnnotations { get; private set; }
+        public bool? debug { get; private set; }
 
-        public IEnumerable<Annotation> clientSideAnnotations 
-        { 
-            get 
+        private Span(Builder builder)
+        {
+            this.traceId = builder.traceId;
+            this.name = Ensure.ArgumentNotNull(builder.name, "name").ToLower();
+            this.id = builder.id;
+            this.parentId = builder.parentId;
+            this.timestamp = builder.timestamp;
+            this.duration = builder.duration;
+            this.annotations = Util.SortedList(builder.annotations);
+            this.binaryAnnotations = Util.SortedList(builder.binaryAnnotations);
+            this.debug = builder.debug;
+        }
+
+        public Builder ToBuilder()
+        {
+            return new Builder(this);
+        }
+
+        public static Builder NewBuilder()
+        {
+            return new Builder();
+        }
+
+        public sealed class Builder
+        {
+            internal long traceId;
+            internal string name;
+            internal long id;
+            internal long? parentId;
+            internal long? timestamp;
+            internal long? duration;
+            internal List<Annotation> annotations;
+            internal List<BinaryAnnotation> binaryAnnotations;
+            internal bool? debug;
+
+            internal Builder()
+            {
+            }
+
+            internal Builder(Span source)
+            {
+                this.traceId = source.traceId;
+                this.name = source.name;
+                this.id = source.id;
+                this.parentId = source.parentId;
+                this.timestamp = source.timestamp;
+                this.duration = source.duration;
+                if (source.annotations.Count != 0)
+                {
+                    this.annotations.AddRange(source.annotations);
+                }
+                if (source.binaryAnnotations.Count != 0)
+                {
+                    this.binaryAnnotations.AddRange(source.binaryAnnotations);
+                }
+                this.debug = source.debug;
+            }
+
+            public Builder Merge(Span that)
+            {
+                if (string.IsNullOrEmpty(this.name) || this.name == "unknown")
+                {
+                    this.name = that.name;
+                }
+                if (this.parentId == null)
+                {
+                    this.parentId = that.parentId;
+                }
+
+                // Single timestamp makes duration easy: just choose max
+                if (this.timestamp == null || that.timestamp == null || this.timestamp.Value == that.timestamp)
+                {
+                    this.timestamp = this.timestamp != null ? this.timestamp : that.timestamp;
+                    if (this.duration == null)
+                    {
+                        this.duration = that.duration;
+                    }
+                    else if (that.duration != null)
+                    {
+                        this.duration = Math.Max(this.duration.Value, that.duration.Value);
+                    }
+                }
+                else
+                {
+                    // duration might need to be recalculated, since we have 2 different timestamps
+                    long thisEndTs = this.duration != null ? this.timestamp.Value + this.duration.Value : this.timestamp.Value;
+                    long thatEndTs = that.duration != null ? that.timestamp.Value + that.duration.Value : that.timestamp.Value;
+                    this.timestamp = Math.Min(this.timestamp.Value, that.timestamp.Value);
+                    this.duration = Math.Max(thisEndTs, thatEndTs) - this.timestamp.Value;
+                }
+
+                foreach (Annotation a in that.annotations)
+                {
+                    AddAnnotation(a);
+                }
+                foreach (BinaryAnnotation a in that.binaryAnnotations)
+                {
+                    AddBinaryAnnotation(a);
+                }
+                if (this.debug == null)
+                {
+                    this.debug = that.debug;
+                }
+                return this;
+            }
+
+            /** @see Span#name */
+            public Builder Name(String name)
+            {
+                this.name = name;
+                return this;
+            }
+
+            /** @see Span#traceId */
+            public Builder TraceId(long traceId)
+            {
+                this.traceId = traceId;
+                return this;
+            }
+
+            /** @see Span#id */
+            public Builder Id(long id)
+            {
+                this.id = id;
+                return this;
+            }
+
+            /** @see Span#parentId */
+            public Builder ParentId(long? parentId)
+            {
+                this.parentId = parentId;
+                return this;
+            }
+
+            /** @see Span#timestamp */
+            public Builder Timestamp(long? timestamp)
+            {
+                this.timestamp = timestamp;
+                return this;
+            }
+
+            /** @see Span#duration */
+            public Builder Duration(long? duration)
+            {
+                this.duration = duration;
+                return this;
+            }
+
+            /**
+             * Replaces currently collected annotations.
+             *
+             * @see Span#annotations
+             */
+            public Builder Annotations(IEnumerable<Annotation> annotations)
+            {
+                this.annotations = new List<Annotation>(annotations);
+                return this;
+            }
+
+            /** @see Span#annotations */
+            public Builder AddAnnotation(Annotation annotation)
+            {
+                if (annotations == null)
+                {
+                    annotations = new List<Annotation>();
+                }
+                annotations.Add(annotation);
+                return this;
+            }
+
+            /**
+             * Replaces currently collected binary annotations.
+             *
+             * @see Span#binaryAnnotations
+             */
+            public Builder BinaryAnnotations(IEnumerable<BinaryAnnotation> binaryAnnotations)
+            {
+                this.binaryAnnotations = new List<BinaryAnnotation>(binaryAnnotations);
+                return this;
+            }
+
+            /** @see Span#binaryAnnotations */
+            public Builder AddBinaryAnnotation(BinaryAnnotation binaryAnnotation)
+            {
+                if (binaryAnnotations == null)
+                {
+                    binaryAnnotations = new List<BinaryAnnotation>();
+                }
+                binaryAnnotations.Add(binaryAnnotation);
+                return this;
+            }
+
+            /** @see Span#debug */
+            public Builder Debug(bool? debug)
+            {
+                this.debug = debug;
+                return this;
+            }
+
+            public Span Build()
+            {
+                return new Span(this);
+            }
+        }
+
+        public IEnumerable<Annotation> clientSideAnnotations
+        {
+            get
             {
                 return annotations.Where(a => Constants.CoreClient.Contains(a.value)).ToList();
             }
@@ -36,10 +241,10 @@ namespace Zipkin
 
         public IEnumerable<string> ServiceNames
         {
-            get 
+            get
             {
                 return this.Endpoints.Where(e => !string.IsNullOrEmpty(e.serviceName)).Select(e => e.serviceName);
-            } 
+            }
         }
 
         public string ServiceName
@@ -73,36 +278,11 @@ namespace Zipkin
         }
 
         public IEnumerable<Endpoint> Endpoints
-        { 
-            get 
+        {
+            get
             {
                 return this.annotations.Select(a => a.endpoint).Concat(this.binaryAnnotations.Select(ba => ba.endpoint));
-            } 
-        }
-
-        public Span()
-        {
-        }
-
-        public Span(long traceId,
-            string name,
-            long id,
-            long? parentId = null,
-            long? timestamp = null,
-            long? duration = null,
-            IList<Annotation> annotations = null,
-            IList<BinaryAnnotation> binaryAnnotations = null,
-            bool? debug = null)
-        {
-            this.traceId = traceId;
-            this.name = name.ToLower(); //checkNotNull(name, "name").toLowerCase();
-            this.id = id;
-            this.parentId = parentId;
-            this.timestamp = timestamp;
-            this.duration = duration;
-            this.annotations = annotations == null ? new List<Annotation>() : Util.SortedList(annotations);
-            this.binaryAnnotations = binaryAnnotations == null ? new List<BinaryAnnotation>() : new ReadOnlyCollection<BinaryAnnotation>(binaryAnnotations).ToList();
-            this.debug = debug;
+            }
         }
 
         public override bool Equals(Object o)

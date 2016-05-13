@@ -42,15 +42,26 @@ namespace Zipkin.Json
 
         public Span Invert()
         {
-            return new Span(Util.HexToLong(traceId),
-                name,
-                Util.HexToLong(id),
-                string.IsNullOrEmpty(parentId) ? null : new Nullable<long>(Util.HexToLong(parentId)),
-                timestamp,
-                duration,
-                annotations == null ? new List<Annotation>() : annotations.Select(a => a.Invert()).ToList(),
-                annotations == null ? new List<BinaryAnnotation>() : binaryAnnotations.Select(a => a.Invert()).ToList(),
-                debug);
+            var builder = Span.NewBuilder()
+                .TraceId(Util.HexToLong(traceId))
+                .Name(name)
+                .Id(Util.HexToLong(id))
+                .Timestamp(timestamp)
+                .Duration(duration)
+                .Debug(debug);
+            if (!string.IsNullOrEmpty(parentId))
+            {
+                builder.ParentId(Util.HexToLong(parentId));
+            }
+            if (annotations != null)
+            {
+                builder.Annotations(annotations.Select(a => a.Invert()).ToList());
+            }
+            if (binaryAnnotations != null)
+            {
+                builder.BinaryAnnotations(binaryAnnotations.Select(a => a.Invert()).ToList());
+            }
+            return builder.Build();
         }
     }
 }

@@ -18,14 +18,14 @@ namespace Zipkin.Adjuster
             // Don't overwrite authoritatively set timestamp and duration!
             if (span.timestamp != null && span.duration != null)
             {
-              return span;
+                return span;
             }
 
             // Only calculate span.timestamp and duration on complete spans. This avoids
             // persisting an inaccurate timestamp due to a late arriving annotation.
             if (span.annotations.Count < 2)
             {
-              return span;
+                return span;
             }
 
             // For spans that core client annotations, the distance between "cs" and "cr" should be the
@@ -35,19 +35,18 @@ namespace Zipkin.Adjuster
             long last = span.annotations.Last().timestamp;
             foreach (var annotation in span.annotations)
             {
-              if (annotation.value == Constants.ClientSend)
-              {
-                first = annotation.timestamp;
-              }
-              else if (annotation.value == Constants.ClientRecv)
-              {
-                last = annotation.timestamp;
-              }
+                if (annotation.value == Constants.ClientSend)
+                {
+                    first = annotation.timestamp;
+                }
+                else if (annotation.value == Constants.ClientRecv)
+                {
+                    last = annotation.timestamp;
+                }
             }
             long ts = span.timestamp ?? first;
             long? dur = span.duration.HasValue ? span.duration : (last == first ? null : new Nullable<long>(last - first));
-            return new Span(span.traceId, span.name, span.id, span.parentId, 
-                ts, dur, span.annotations, span.binaryAnnotations, span.debug);
+            return span.ToBuilder().Timestamp(ts).Duration(dur).Build();
         }
     }
 }

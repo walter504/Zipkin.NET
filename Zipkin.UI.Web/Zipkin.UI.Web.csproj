@@ -120,7 +120,7 @@
     <Content Include="app\libs\requirejs\.bower.json" />
     <Content Include="Views\Dependency\Index.cshtml" />
     <Content Include="Views\Traces\Index.cshtml" />
-    <Content Include="packages.config" />
+    <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\release.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

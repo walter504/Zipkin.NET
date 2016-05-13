@@ -134,7 +134,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="packages.config" />
+    <None Include="packages.config" />
     <Content Include="configs\log4net.config" />
     <Content Include="configs\cassandra.json" />
     <None Include="Properties\PublishProfiles\release.pubxml" />
