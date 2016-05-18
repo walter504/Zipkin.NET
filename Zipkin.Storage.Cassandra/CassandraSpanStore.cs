@@ -46,6 +46,7 @@ namespace Zipkin.Storage.Cassandra
                     CreateSpanColumnName(span),
                     Codec.THRIFT.WriteSpan(span),
                     spanTtl));
+                tasks.Add(Repo.StoreTraceIdByUpdateTime(span.traceId, DateTime.Now, indexTtl));
                 foreach (var serviceName in span.ServiceNames)
                 {
                     // SpanStore.GetServiceNames
@@ -105,7 +106,7 @@ namespace Zipkin.Storage.Cassandra
                 }
             }
 
-            return Task.WhenAny(tasks);
+            return Task.WhenAll(tasks);
         }
 
         public async Task<IEnumerable<IEnumerable<Span>>> GetTraces(QueryRequest request)

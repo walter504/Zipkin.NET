@@ -67,11 +67,11 @@ namespace Zipkin
                 this.duration = source.duration;
                 if (source.annotations.Count != 0)
                 {
-                    this.annotations.AddRange(source.annotations);
+                    this.annotations = source.annotations;
                 }
                 if (source.binaryAnnotations.Count != 0)
                 {
-                    this.binaryAnnotations.AddRange(source.binaryAnnotations);
+                    this.binaryAnnotations = source.binaryAnnotations;
                 }
                 this.debug = source.debug;
             }

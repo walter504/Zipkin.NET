@@ -62,3 +62,11 @@ CREATE TABLE IF NOT EXISTS zipkin.span_duration_index (
     PRIMARY KEY ((service_name, span_name, bucket), duration, ts, trace_id)
 ) WITH CLUSTERING ORDER BY (duration DESC, ts DESC)
     AND compaction = {'class': 'org.apache.cassandra.db.compaction.DateTieredCompactionStrategy', 'max_sstable_age_days': '1'};
+
+CREATE TABLE IF NOT EXISTS zipkin.trace_updatetime (
+	trace_id      bigint,
+	updatetime    timestamp,
+	PRIMARY KEY (trace_id)
+) WITH compaction = {'class': 'org.apache.cassandra.db.compaction.DateTieredCompactionStrategy', 'max_sstable_age_days': '1'};
+
+CREATE INDEX IF NOT EXISTS updatetime_trace_index ON zipkin.trace_updatetime (updatetime);

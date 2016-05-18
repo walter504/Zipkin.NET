@@ -42,6 +42,10 @@ namespace Zipkin.Storage.Cassandra
         private readonly PreparedStatement insertTraceIdByAnnotation;
         private readonly PreparedStatement selectTraceIdsBySpanDuration;
         private readonly PreparedStatement insertTraceIdBySpanDuration;
+
+        private readonly PreparedStatement selectTraceIdsByUpdateTime;
+        private readonly PreparedStatement insertTraceIdByUpdateTime;
+
         private readonly Dictionary<string, string> metadata;
         private readonly Func<RowSet, Dictionary<long, long>> traceIdToTimestamp;
 
@@ -77,6 +81,10 @@ namespace Zipkin.Storage.Cassandra
                 + " ORDER BY duration;";
         private const string insertTraceIdBySpanDurationQuery = "INSERT INTO span_duration_index(service_name, span_name, bucket, duration, ts, trace_id)"
                 + " VALUES(:service_name, :span_name, :bucket, :duration, :ts, :trace_id) USING TTL :ttl_;";
+
+        private const string selectTraceIdsByUpdateTimeQuery = "SELECT trace_id FROM trace_updatetime WHERE updatetime = :updatetime ALLOW FILTERING;";
+        private const string insertTraceIdByUpdateTimeQuery = "INSERT INTO trace_updatetime(trace_id, updatetime)"
+                + " VALUES(:trace_id, :updatetime) USING TTL :ttl_;";
 
         private readonly ThreadLocal<ISet<string>> writtenNames = new ThreadLocalSet();
 
@@ -135,6 +143,9 @@ namespace Zipkin.Storage.Cassandra
             selectTraceIdsBySpanDuration = session.Prepare(selectTraceIdsBySpanDurationQuery);
             insertTraceIdBySpanDuration = session.Prepare(insertTraceIdBySpanDurationQuery);
 
+            selectTraceIdsByUpdateTime = session.Prepare(selectTraceIdsByUpdateTimeQuery);
+            insertTraceIdByUpdateTime = session.Prepare(insertTraceIdByUpdateTimeQuery);
+
             traceIdToTimestamp = new Func<RowSet, Dictionary<long, long>>((input) =>
             {
                 var traceIdsToTimestamps = new Dictionary<long, long>();
@@ -192,7 +203,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":ts", timestamp.ToString())
                 .Replace(":span_name", spanName)
                 .Replace(":span", Convert.ToBase64String(span))
-                .Replace(":ttl__", ttl.ToString());
+                .Replace(":ttl_", ttl.ToString());
         }
 
         /// <summary>
@@ -542,7 +553,7 @@ namespace Zipkin.Storage.Cassandra
                 {
                     service_span_name = serviceSpanName,
                     ts = Util.FromUnixTimeMicroseconds(timestamp),
-                    traceId = traceId,
+                    trace_id = traceId,
                     ttl_ = ttl
                 });
 
@@ -565,7 +576,7 @@ namespace Zipkin.Storage.Cassandra
                     .Replace(":service_span_name", serviceSpanName)
                     .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                     .Replace(":trace_id", traceId.ToString())
-                    .Replace(":ttl__", ttl.ToString());
+                    .Replace(":ttl_", ttl.ToString());
         }
 
         public async Task<Dictionary<long, long>> GetTraceIdsBySpanName(string serviceName, string spanName, long endTs, long lookback, int limit)
@@ -637,7 +648,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":annotation", Convert.ToBase64String(annotationKey))
                 .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                 .Replace(":trace_id", traceId.ToString())
-                .Replace(":ttl__", ttl.ToString());
+                .Replace(":ttl_", ttl.ToString());
         }
 
         public async Task<Dictionary<long, long>> GetTraceIdsByAnnotation(byte[] annotationKey, long endTs, long lookback, int limit)
@@ -688,6 +699,7 @@ namespace Zipkin.Storage.Cassandra
                     span_name = spanName,
                     bucket = DurationIndexBucket(timestamp),
                     ts = Util.FromUnixTimeMicroseconds(timestamp),
+                    duration = duration,
                     trace_id = traceId,
                     ttl_ = ttl
                 });
@@ -714,7 +726,7 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":ts", Util.FromUnixTimeMicroseconds(timestamp).ToString())
                 .Replace(":duration", duration.ToString())
                 .Replace(":trace_id", traceId.ToString())
-                .Replace(":ttl__", ttl.ToString());
+                .Replace(":ttl_", ttl.ToString());
         }
 
         /** Returns a map of trace id to timestamp (in microseconds) */
@@ -741,13 +753,9 @@ namespace Zipkin.Storage.Cassandra
             foreach (var row in result.SelectMany(rs => rs))
             {
                 long oldValue;
-                if (!traceIdsToTimestamps.TryGetValue(row.trace_id, out oldValue))
+                if (!traceIdsToTimestamps.TryGetValue(row.trace_id, out oldValue) || oldValue > row.timestamp)
                 {
                     traceIdsToTimestamps[row.trace_id] = row.timestamp;
-                }
-                else if (oldValue > row.timestamp)
-                {
-                    traceIdsToTimestamps.Add(row.trace_id, row.timestamp);
                 }
             }
             return traceIdsToTimestamps;
@@ -767,7 +775,7 @@ namespace Zipkin.Storage.Cassandra
                 {
                     service_name = serviceName,
                     span_name = spanName,
-                    time_bucket = bucket,
+                    bucket = bucket,
                     max_duration = maxDuration,
                     min_duration = minDuration
                 });
@@ -811,6 +819,63 @@ namespace Zipkin.Storage.Cassandra
                 .Replace(":limit_", limit.ToString());
         }
 
+        public Task StoreTraceIdByUpdateTime(long traceId, DateTimeOffset updatetime, int ttl)
+        {
+            var minute = new DateTime(updatetime.Year, updatetime.Month, updatetime.Day, updatetime.Hour, updatetime.Minute, 0);
+            try
+            {
+                BoundStatement bound = insertTraceIdByUpdateTime.Bind(new
+                {
+                    trace_id = traceId,
+                    updatetime = minute,
+                    ttl_ = ttl
+                });
+
+                if (log.IsDebugEnabled)
+                {
+                    log.Debug(DebugInsertTraceIdByUpdateTime(traceId, minute, ttl));
+                }
+                return session.ExecuteAsync(bound);
+            }
+            catch (Exception ex)
+            {
+                log.Error("failed " + DebugInsertTraceIdByUpdateTime(traceId, minute, ttl), ex);
+                throw ex;
+            }
+        }
+        private string DebugInsertTraceIdByUpdateTime(long traceId, DateTimeOffset updatetime, int ttl)
+        {
+            return selectTraceIdsBySpanDurationQuery
+                .Replace(":trace_id", traceId.ToString())
+                .Replace(":updatetime", updatetime.ToString())
+                .Replace(":ttl_", ttl.ToString());
+        }
+
+        public async Task<List<long>> GetTraceIdsByUpdateTime(DateTimeOffset updatetime)
+        {
+            var minute = new DateTime(updatetime.Year, updatetime.Month, updatetime.Day, updatetime.Hour, updatetime.Minute, 0);
+            try
+            {
+                BoundStatement bound = selectTraceIdsByUpdateTime.Bind(new { updatetime = minute });
+
+                if (log.IsDebugEnabled)
+                {
+                    log.Debug(DebugSelectTraceIdsByUpdateTime(minute));
+                }
+                var result = await session.ExecuteAsync(bound);
+                return result.GetRows().Select(r => r.GetValue<long>("trace_id")).ToList();
+            }
+            catch (Exception ex)
+            {
+                log.Error("failed " + DebugSelectTraceIdsByUpdateTime(minute), ex);
+                throw ex;
+            }
+        }
+        private string DebugSelectTraceIdsByUpdateTime(DateTimeOffset updatetime)
+        {
+            return selectTraceIdsBySpanDurationQuery
+                .Replace(":updatetime", updatetime.ToString());
+        }
 
         private int DurationIndexBucket(long ts)
         {
@@ -838,7 +903,7 @@ namespace Zipkin.Storage.Cassandra
             {
                 trace_id = row.GetValue<long>("trace_id");
                 duration = row.GetValue<long>("duration");
-                timestamp = Util.ToUnixTimeMilliseconds(row.GetValue<DateTimeOffset>("ts").DateTime);
+                timestamp = Util.ToUnixTimeMicroseconds(row.GetValue<DateTimeOffset>("ts").DateTime);
             }
 
             public override string ToString()

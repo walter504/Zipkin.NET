@@ -83,7 +83,7 @@ namespace Zipkin.Adjuster
 
         private static ClockSkew GetClockSkew(Span span)
         {
-            var annotations = span.annotations.ToDictionary(a => a.value, a => a);
+            var annotations = AsDictionary(span.annotations);
 
             var clientSend = GetTimestamp(annotations, Constants.ClientSend);
             var clientRecv = GetTimestamp(annotations, Constants.ClientRecv);
@@ -116,6 +116,15 @@ namespace Zipkin.Adjuster
                 return new ClockSkew(server, skew);
             }
             return null;
+        }
+
+        private static Dictionary<string, Annotation> AsDictionary(List<Annotation> annotations)
+        {
+            var result = new Dictionary<string, Annotation>();
+            foreach (var a in annotations) {
+                result[a.value] = a;
+            }
+            return result;
         }
 
         private static long? GetTimestamp(Dictionary<string, Annotation> annotations, string value)
