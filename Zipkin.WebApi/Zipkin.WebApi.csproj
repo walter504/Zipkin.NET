@@ -152,6 +152,7 @@
   <ItemGroup>
     <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="Controllers\ZipkinQueryController.cs" />
+    <Compile Include="CommonExceptionLogger.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

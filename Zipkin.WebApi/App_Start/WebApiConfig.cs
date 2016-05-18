@@ -34,6 +34,8 @@ namespace Zipkin.WebApi
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+
+            config.Services.Replace(typeof(IExceptionLogger), new CommonExceptionLogger());
         }
     }
 }

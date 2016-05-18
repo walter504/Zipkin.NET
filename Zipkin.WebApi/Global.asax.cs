@@ -50,7 +50,6 @@ namespace Zipkin.WebApi
         {
             builder.Register(c => Sampler.Create(1.0F)).As<Sampler>().SingleInstance();
             builder.RegisterType<ZipkinSpanWriter>().SingleInstance();
-            //builder.RegisterType<MySqlSpanStore>().As<ISpanStore>();
 
             var configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("configs/cassandra.json");
@@ -72,12 +71,12 @@ namespace Zipkin.WebApi
             {
                 if (exception.GetHttpCode() != 404)
                 {
-                    log.ErrorFormat("Http错误(HttpCode-{0}): {1}", exception.GetHttpCode(), exception);
+                    log.ErrorFormat("http error(HttpCode-{0}): {1}", exception.GetHttpCode(), exception);
                 }
             }
             else
             {
-                log.Error("未捕获的异常: " + exception);
+                log.Error("unexpected exception", exception);
             }
         }
 
