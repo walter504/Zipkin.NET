@@ -12,7 +12,7 @@ namespace Zipkin.TraceGen
 {
     class Program
     {
-        private static int traceCount = 5;
+        private static int traceCount = 20;
         private static int maxDepth = 7;
 
         private static string queryDest = "http://localhost:9411";
@@ -31,8 +31,8 @@ namespace Zipkin.TraceGen
 
         static void GenerateTraces()
         {
-            var traceGen = new TraceGen(traceCount, maxDepth);
-            var traces = traceGen.Apply();
+            //var traceGen = new TraceGen(traceCount, maxDepth);
+            //var traces = traceGen.Apply();
             //var jsonSpans = traces.Select(s => new JsonSpan(s)).ToList();
             //var data = JsonConvert.SerializeObject(jsonSpans);
 
@@ -40,10 +40,14 @@ namespace Zipkin.TraceGen
             //var jsonSpans = JsonConvert.DeserializeObject<List<JsonSpan>>(data);
             //var traces = jsonSpans.Select(js => js.Invert()).ToList();
 
-            var startTs = DateTime.Now.Ticks;
-
-            LogEntry(traces);
-            Console.WriteLine("post {0} spans cost {1}ms", traces.Count, (DateTime.Now.Ticks - startTs) / 10000);
+            Parallel.For(1, 100000, new ParallelOptions() { MaxDegreeOfParallelism = 6 }, (i) => 
+            {
+                var startTs = DateTime.Now.Ticks;
+                var traceGen = new TraceGen(traceCount, maxDepth);
+                var traces = traceGen.Apply();
+                LogEntry(traces);
+                Console.WriteLine("Num:{0} --> post {1} spans cost {2}ms", i, traces.Count, (DateTime.Now.Ticks - startTs) / 10000);
+            });
 
             if (!generateOnly)
             {
@@ -54,6 +58,10 @@ namespace Zipkin.TraceGen
         {
             var thriftCodec = new ThriftCodec();
             var bytes = thriftCodec.WriteSpans(spans);
+            WebClient queryClient = new WebClient()
+            {
+                BaseAddress = queryDest
+            };
             queryClient.Encoding = System.Text.Encoding.UTF8;
             queryClient.Headers.Add("Content-Type", "application/x-thrift");
             queryClient.UploadData("/api/v1/spans", "POST", bytes);

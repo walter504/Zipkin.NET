@@ -12,10 +12,10 @@ namespace Zipkin.Internal
             return a == b || (a != null && a.Equals(b));
         }
 
-        public static List<T> SortedList<T>(IList<T> input) where T : IComparable<T>
+        public static List<T> SortedList<T>(IEnumerable<T> input) where T : IComparable<T>
         {
-            if (input == null || 0 == input.Count) return new List<T>();
-            if (input.Count == 1) return new ReadOnlyCollection<T>(input).ToList();
+            if (input == null || 0 == input.Count()) return new List<T>();
+            if (input.Count() == 1) return new ReadOnlyCollection<T>(input.ToList()).ToList();
             List<T> result = input.ToList();
             result.Sort();
             return new ReadOnlyCollection<T>(result).ToList();

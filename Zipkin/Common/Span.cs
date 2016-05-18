@@ -49,8 +49,8 @@ namespace Zipkin
             internal long? parentId;
             internal long? timestamp;
             internal long? duration;
-            internal List<Annotation> annotations;
-            internal List<BinaryAnnotation> binaryAnnotations;
+            internal HashSet<Annotation> annotations;
+            internal HashSet<BinaryAnnotation> binaryAnnotations;
             internal bool? debug;
 
             internal Builder()
@@ -67,11 +67,11 @@ namespace Zipkin
                 this.duration = source.duration;
                 if (source.annotations.Count != 0)
                 {
-                    this.annotations = source.annotations;
+                    this.annotations = new HashSet<Annotation>(source.annotations);
                 }
                 if (source.binaryAnnotations.Count != 0)
                 {
-                    this.binaryAnnotations = source.binaryAnnotations;
+                    this.binaryAnnotations = new HashSet<BinaryAnnotation>(source.binaryAnnotations);
                 }
                 this.debug = source.debug;
             }
@@ -173,7 +173,7 @@ namespace Zipkin
              */
             public Builder Annotations(IEnumerable<Annotation> annotations)
             {
-                this.annotations = new List<Annotation>(annotations);
+                this.annotations = new HashSet<Annotation>(annotations);
                 return this;
             }
 
@@ -182,7 +182,7 @@ namespace Zipkin
             {
                 if (annotations == null)
                 {
-                    annotations = new List<Annotation>();
+                    annotations = new HashSet<Annotation>();
                 }
                 annotations.Add(annotation);
                 return this;
@@ -195,7 +195,7 @@ namespace Zipkin
              */
             public Builder BinaryAnnotations(IEnumerable<BinaryAnnotation> binaryAnnotations)
             {
-                this.binaryAnnotations = new List<BinaryAnnotation>(binaryAnnotations);
+                this.binaryAnnotations = new HashSet<BinaryAnnotation>(binaryAnnotations);
                 return this;
             }
 
@@ -204,7 +204,7 @@ namespace Zipkin
             {
                 if (binaryAnnotations == null)
                 {
-                    binaryAnnotations = new List<BinaryAnnotation>();
+                    binaryAnnotations = new HashSet<BinaryAnnotation>();
                 }
                 binaryAnnotations.Add(binaryAnnotation);
                 return this;
@@ -243,7 +243,7 @@ namespace Zipkin
         {
             get
             {
-                return this.Endpoints.Where(e => !string.IsNullOrEmpty(e.serviceName)).Select(e => e.serviceName);
+                return this.Endpoints.Where(e => !string.IsNullOrEmpty(e.serviceName)).Select(e => e.serviceName).Distinct();
             }
         }
 
@@ -281,7 +281,7 @@ namespace Zipkin
         {
             get
             {
-                return this.annotations.Select(a => a.endpoint).Concat(this.binaryAnnotations.Select(ba => ba.endpoint));
+                return this.annotations.Select(a => a.endpoint).Concat(this.binaryAnnotations.Select(ba => ba.endpoint)).Distinct();
             }
         }
 
