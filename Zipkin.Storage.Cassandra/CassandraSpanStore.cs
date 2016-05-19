@@ -147,20 +147,20 @@ namespace Zipkin.Storage.Cassandra
                     AnnotationKey(request.serviceName, ba.Key, System.Text.Encoding.UTF8.GetBytes(ba.Value)),
                     request.endTs * 1000, request.lookback * 1000, request.limit));
             }
-            List<long> traceIds = new List<long>();
+            IEnumerable<long> traceIds;
             if (taskKeySetsToIntersect.Count == 0)
             {
-                traceIds = (await traceIdToTimestamp).Keys.ToList();
+                traceIds = (await traceIdToTimestamp).Keys.Take(request.limit);
             }
             else
             {
                 taskKeySetsToIntersect.Add(traceIdToTimestamp);
                 var traceIdsToTimestamps = await Task.WhenAll(taskKeySetsToIntersect);
                 var groupTraceIds = traceIdsToTimestamps.Select(kvp => kvp.Keys.AsEnumerable()).ToList();
-                traceIds = groupTraceIds.Aggregate(groupTraceIds[0], (acc, next) => acc.Intersect(next)).ToList();
+                traceIds = groupTraceIds.Aggregate(groupTraceIds[0], (acc, next) => acc.Intersect(next));
             }
 
-            var result = await Repo.GetSpansByTraceIds(traceIds.ToArray(), maxTraceCols);
+            var result = await Repo.GetSpansByTraceIds(traceIds.Take(request.limit).ToArray(), maxTraceCols);
             return result.Select(ss => MergeById.Apply(ss)).Select(ss => CorrectForClockSkew.Apply(ss));
         }
 

@@ -78,7 +78,7 @@ namespace Zipkin.Storage.Cassandra
         private const string selectTraceIdsBySpanDurationQuery = "SELECT duration, ts, trace_id FROM span_duration_index"
                 + " WHERE service_name = :service_name  AND span_name = :span_name AND bucket = :bucket"
                 + " AND duration >= :min_duration AND duration <= :max_duration"
-                + " ORDER BY duration;";
+                + " ORDER BY duration DESC";
         private const string insertTraceIdBySpanDurationQuery = "INSERT INTO span_duration_index(service_name, span_name, bucket, duration, ts, trace_id)"
                 + " VALUES(:service_name, :span_name, :bucket, :duration, :ts, :trace_id) USING TTL :ttl_;";
 
@@ -790,16 +790,9 @@ namespace Zipkin.Storage.Cassandra
                 }
 
                 var result = await session.ExecuteAsync(bound);
-                var rows = new List<DurationRow>();
-                foreach (var input in result.GetRows())
-                {
-                    DurationRow row = new DurationRow(input);
-                    if (row.timestamp >= startTs && row.timestamp <= endTs)
-                    {
-                        rows.Add(row);
-                    }
-                }
-                return rows;
+                return result.GetRows().Select(r => new DurationRow(r))
+                    .Where(r => r.timestamp >= startTs && r.timestamp <= endTs)
+                    .Take(limit).ToList();
             }
             catch (Exception ex)
             {
