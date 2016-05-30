@@ -69,7 +69,7 @@ namespace Zipkin.WebApi.Controllers
             var contentType = HttpContext.Current.Request.ContentType;
             if (contentType.StartsWith("application/json"))
             {
-                var jsons = Jil.JSON.Deserialize<List<JsonSpan>>(Encoding.UTF8.GetString(bytes));
+                var jsons = Newtonsoft.Json.JsonConvert.DeserializeObject<List<JsonSpan>>(Encoding.UTF8.GetString(bytes));
                 spans = jsons.Select(js => js.Invert()).ToList();
             }
             else
