@@ -19,8 +19,8 @@ namespace Zipkin.WebApi
                 props.ContactPoints = section.Get<string>("contactPoints", props.ContactPoints);
                 props.LocalDc = section.Get<string>("localDc", props.LocalDc);
                 props.MaxConnections = section.Get<int>("maxConnections", props.MaxConnections);
-                props.EnsureSchema = section.Get<bool>("pnsureSchema", props.EnsureSchema);
-                props.Username = section.Get<string>("psername", props.Username);
+                props.EnsureSchema = section.Get<bool>("ensureSchema", props.EnsureSchema);
+                props.Username = section.Get<string>("username", props.Username);
                 props.Password = section.Get<string>("password", props.Password);
                 props.MaxTraceCols = section.Get<int>("maxTraceCols", props.MaxTraceCols);
                 props.BucketCount = section.Get<int>("bucketCount", props.BucketCount);
